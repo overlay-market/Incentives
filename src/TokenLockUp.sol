@@ -41,12 +41,13 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         uint256 _amount,
         uint _lockDuration
     ) external nonReentrant whenNotPaused {
-        if (_amount == 0) revert TokenLockUp_AmountShouldBeGreaterThanZero();
-        if (_lockDuration == 0)
-            revert TokenLockUp_LockDurationShouldBeGreaterThanZero();
         if (block.timestamp > depositDeadline)
             revert TokenLockUp_DepositDeadlineReached();
 
+        if (_lockDuration == 0)
+            revert TokenLockUp_LockDurationShouldBeGreaterThanZero();
+
+        if (_amount == 0) revert TokenLockUp_AmountShouldBeGreaterThanZero();
         SafeERC20.safeTransferFrom(token, msg.sender, address(this), _amount);
 
         locks[msg.sender].push(
@@ -74,6 +75,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     function unpause() external {
         if (block.timestamp >= depositDeadline)
             revert TokenLockUp_DepositDeadlineNotSet();
+
         _unpause();
     }
 
@@ -81,9 +83,10 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     function withdrawTokens(uint256 _index) external nonReentrant {
         if (_index > locks[msg.sender].length)
             revert TokenLockUp_Invalid_Index();
-        LockDetails storage lock = locks[msg.sender][_index];
 
+        LockDetails storage lock = locks[msg.sender][_index];
         if (lock.withdrawn) revert TokenLockUp_TokensAlreadyWithdrawn();
+
         if (block.timestamp < lock.lockStart + lock.lockDuration)
             revert TokenLockUp_TokensAreStillLocked();
 
@@ -91,7 +94,6 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         lock.withdrawn = true;
 
         SafeERC20.safeTransfer(token, msg.sender, withdrawAmount);
-
         emit Withdrawal(msg.sender, block.timestamp, withdrawAmount);
     }
 
@@ -106,6 +108,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     function setDepositDeadline(uint _depositDeadline) external onlyOwner {
         if (depositDeadline > block.timestamp)
             revert TokenLockUp_PreviousDeadlineNotEnded();
+
         depositDeadline = _depositDeadline;
     }
 
