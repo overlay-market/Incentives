@@ -1,4 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
+
+/**
+ * Created on 2023-05-01 11:39
+ * @Summary A smart contract that mints NFTs as reward for the LockUp contract.
+ * @title OverlayNFT
+ * @author: Overlay - c-n-o-t-e
+ */
+
 pragma solidity 0.8.13;
 
 import "openzeppelin-contracts/contracts/utils/Strings.sol";

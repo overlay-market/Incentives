@@ -1,36 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 
+/**
+ * Created on 2023-05-02 02:00
+ * @Summary A smart contract that let users lock their tokens and get an NFT.
+ * @title TokenTokenLockUp
+ * @author: Overlay - c-n-o-t-e
+ */
+
 pragma solidity ^0.8.13;
 
 import "src/interfaces/IOverlayNFT.sol";
+import "src/interfaces/ITokenLockUp.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/security/Pausable.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
 import "openzeppelin-contracts/contracts/security/ReentrancyGuard.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
-error LockUp_Invalid_Index();
-error LockUp_TokensAreStillLocked();
-error LockUp_DepositDeadlineNotSet();
-error LockUp_DepositDeadlineReached();
-error LockUp_TokensAlreadyWithdrawn();
-error LockUp_PreviousDeadlineNotEnded();
-error LockUp_DurationBelowExistingDuration();
-error LockUp_AmountShouldBeGreaterThanZero();
-error LockUp_LockDurationShouldBeGreaterThanZero();
-
-contract LockUp is Ownable, Pausable, ReentrancyGuard {
-
-    event Deposit(
-        address indexed _addr,
-        uint256 timestamp,
-        uint256 amount
-    );
-    event Withdrawal(
-        address indexed _addr,
-        uint256 timestamp,
-        uint256 amount
-    );
+contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
     IERC20 public token;
     IOverlayNFT public nftContract;
@@ -46,15 +33,15 @@ contract LockUp is Ownable, Pausable, ReentrancyGuard {
     mapping(address => LockDetails[]) public locks;
 
     constructor(address _tokenAddress, address _nftAddress) {
-        pause();
         token = IERC20(_tokenAddress);
         nftContract = IOverlayNFT(_nftAddress);
     }
 
+    /// @inheritdoc ITokenLockUp
     function deposit(uint256 _amount, uint _lockDuration) external nonReentrant() whenNotPaused() {
-        if(_amount == 0) revert LockUp_AmountShouldBeGreaterThanZero();
-        if(_lockDuration == 0) revert LockUp_LockDurationShouldBeGreaterThanZero();
-        if(block.timestamp > depositDeadline) revert LockUp_DepositDeadlineReached();
+        if(_amount == 0) revert TokenLockUp_AmountShouldBeGreaterThanZero();
+        if(_lockDuration == 0) revert TokenLockUp_LockDurationShouldBeGreaterThanZero();
+        if(block.timestamp > depositDeadline) revert TokenLockUp_DepositDeadlineReached();
 
         SafeERC20.safeTransferFrom(
             token,
@@ -84,16 +71,17 @@ contract LockUp is Ownable, Pausable, ReentrancyGuard {
     }
 
     function unpause() external {
-        if(block.timestamp >= depositDeadline) revert LockUp_DepositDeadlineNotSet();
+        if(block.timestamp >= depositDeadline) revert TokenLockUp_DepositDeadlineNotSet();
         _unpause();
     }
 
+    /// @inheritdoc ITokenLockUp
     function withdrawTokens(uint256 _index) external nonReentrant() {
-        if(_index > locks[msg.sender].length) revert LockUp_Invalid_Index();
+        if(_index > locks[msg.sender].length) revert TokenLockUp_Invalid_Index();
         LockDetails storage lock = locks[msg.sender][_index];
 
-        if(lock.withdrawn) revert LockUp_TokensAlreadyWithdrawn();
-        if(block.timestamp < lock.lockStart + lock.lockDuration) revert LockUp_TokensAreStillLocked();
+        if(lock.withdrawn) revert TokenLockUp_TokensAlreadyWithdrawn();
+        if(block.timestamp < lock.lockStart + lock.lockDuration) revert TokenLockUp_TokensAreStillLocked();
         
         uint256 withdrawAmount = lock.amount;
         lock.withdrawn = true;
@@ -120,7 +108,7 @@ contract LockUp is Ownable, Pausable, ReentrancyGuard {
     }
 
     function setDepositDeadline(uint _depositDeadline) external onlyOwner {
-        if(depositDeadline > block.timestamp) revert LockUp_PreviousDeadlineNotEnded();
+        if(depositDeadline > block.timestamp) revert TokenLockUp_PreviousDeadlineNotEnded();
         depositDeadline = _depositDeadline;
     }
 
