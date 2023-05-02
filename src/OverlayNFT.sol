@@ -4,12 +4,14 @@ pragma solidity 0.8.13;
 import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
+import "openzeppelin-contracts/contracts/utils/Counters.sol";
 
 error OverlayNFT_OnlyStakingContract();
 
 contract OverlayNFT is ERC721, Ownable {
 
     using Strings for uint256;
+    using Counters for Counters.Counter;
 
     event Mint(
         address indexed _addr,
@@ -18,6 +20,7 @@ contract OverlayNFT is ERC721, Ownable {
     
     string public baseURI;
     uint256 public currentTokenId;
+    Counters.Counter public _orderID;
     address public stakingContract;
 
     constructor(
@@ -38,10 +41,10 @@ contract OverlayNFT is ERC721, Ownable {
     }
 
     function mintTo(address _recipient) external onlyStakingContract returns (uint256) {
-        uint256 newTokenId = ++currentTokenId;
-        _safeMint(_recipient, newTokenId);
+        _orderID.increment();
+        _safeMint(_recipient, _orderID.current());
 
-        emit Mint(_recipient, newTokenId);
+        emit Mint(_recipient, _orderID.current());
         return newTokenId;
     }
 
