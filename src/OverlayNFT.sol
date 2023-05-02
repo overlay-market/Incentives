@@ -10,6 +10,12 @@ error OverlayNFT_OnlyStakingContract();
 contract OverlayNFT is ERC721, Ownable {
 
     using Strings for uint256;
+
+    event Mint(
+        address indexed _addr,
+        uint256 id
+    );
+    
     string public baseURI;
     uint256 public currentTokenId;
     address public stakingContract;
@@ -22,7 +28,7 @@ contract OverlayNFT is ERC721, Ownable {
         baseURI = _baseURI;
     }
 
-    modifier onlyStakingContract{
+    modifier onlyStakingContract() {
         if(msg.sender != stakingContract) revert OverlayNFT_OnlyStakingContract();
         _;
     }
@@ -34,6 +40,8 @@ contract OverlayNFT is ERC721, Ownable {
     function mintTo(address _recipient) external onlyStakingContract returns (uint256) {
         uint256 newTokenId = ++currentTokenId;
         _safeMint(_recipient, newTokenId);
+
+        emit Mint(_recipient, newTokenId);
         return newTokenId;
     }
 
