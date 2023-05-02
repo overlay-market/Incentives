@@ -52,16 +52,9 @@ contract LockUp is Ownable, Pausable, ReentrancyGuard {
     }
 
     function deposit(uint256 _amount, uint _lockDuration) external nonReentrant() whenNotPaused() {
-        if(block.timestamp > depositDeadline) revert LockUp_DepositDeadlineReached();
         if(_amount == 0) revert LockUp_AmountShouldBeGreaterThanZero();
         if(_lockDuration == 0) revert LockUp_LockDurationShouldBeGreaterThanZero();
-
-        locks[msg.sender].push(LockDetails({
-            amount: _amount,
-            lockDuration: _lockDuration,
-            lockStart: block.timestamp,
-            withdrawn: false
-        }));
+        if(block.timestamp > depositDeadline) revert LockUp_DepositDeadlineReached();
 
         SafeERC20.safeTransferFrom(
             token,
@@ -69,6 +62,13 @@ contract LockUp is Ownable, Pausable, ReentrancyGuard {
             address(this),
             _amount
         );
+
+        locks[msg.sender].push(LockDetails({
+            amount: _amount,
+            lockDuration: _lockDuration,
+            lockStart: block.timestamp,
+            withdrawn: false
+        }));
 
         uint numberOfNftToSend = calculateNftToSend(_amount, _lockDuration);
 
