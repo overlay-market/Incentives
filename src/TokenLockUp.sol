@@ -18,7 +18,6 @@ import "openzeppelin-contracts/contracts/security/ReentrancyGuard.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 
 contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
-
     IERC20 public token;
     IOverlayNFT public nftContract;
     uint256 public depositDeadline;
@@ -38,31 +37,33 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-    function deposit(uint256 _amount, uint _lockDuration) external nonReentrant() whenNotPaused() {
-        if(_amount == 0) revert TokenLockUp_AmountShouldBeGreaterThanZero();
-        if(_lockDuration == 0) revert TokenLockUp_LockDurationShouldBeGreaterThanZero();
-        if(block.timestamp > depositDeadline) revert TokenLockUp_DepositDeadlineReached();
+    function deposit(
+        uint256 _amount,
+        uint _lockDuration
+    ) external nonReentrant whenNotPaused {
+        if (_amount == 0) revert TokenLockUp_AmountShouldBeGreaterThanZero();
+        if (_lockDuration == 0)
+            revert TokenLockUp_LockDurationShouldBeGreaterThanZero();
+        if (block.timestamp > depositDeadline)
+            revert TokenLockUp_DepositDeadlineReached();
 
-        SafeERC20.safeTransferFrom(
-            token,
-            msg.sender,
-            address(this),
-            _amount
+        SafeERC20.safeTransferFrom(token, msg.sender, address(this), _amount);
+
+        locks[msg.sender].push(
+            LockDetails({
+                amount: _amount,
+                lockDuration: _lockDuration,
+                lockStart: block.timestamp,
+                withdrawn: false
+            })
         );
-
-        locks[msg.sender].push(LockDetails({
-            amount: _amount,
-            lockDuration: _lockDuration,
-            lockStart: block.timestamp,
-            withdrawn: false
-        }));
 
         uint numberOfNftToSend = calculateNftToSend(_amount, _lockDuration);
 
-        for(uint i; i < numberOfNftToSend; i++){
+        for (uint i; i < numberOfNftToSend; i++) {
             nftContract.mintTo(msg.sender);
         }
-        
+
         emit Deposit(msg.sender, block.timestamp + _lockDuration, _amount);
     }
 
@@ -71,32 +72,27 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     function unpause() external {
-        if(block.timestamp >= depositDeadline) revert TokenLockUp_DepositDeadlineNotSet();
+        if (block.timestamp >= depositDeadline)
+            revert TokenLockUp_DepositDeadlineNotSet();
         _unpause();
     }
 
     /// @inheritdoc ITokenLockUp
-    function withdrawTokens(uint256 _index) external nonReentrant() {
-        if(_index > locks[msg.sender].length) revert TokenLockUp_Invalid_Index();
+    function withdrawTokens(uint256 _index) external nonReentrant {
+        if (_index > locks[msg.sender].length)
+            revert TokenLockUp_Invalid_Index();
         LockDetails storage lock = locks[msg.sender][_index];
 
-        if(lock.withdrawn) revert TokenLockUp_TokensAlreadyWithdrawn();
-        if(block.timestamp < lock.lockStart + lock.lockDuration) revert TokenLockUp_TokensAreStillLocked();
-        
+        if (lock.withdrawn) revert TokenLockUp_TokensAlreadyWithdrawn();
+        if (block.timestamp < lock.lockStart + lock.lockDuration)
+            revert TokenLockUp_TokensAreStillLocked();
+
         uint256 withdrawAmount = lock.amount;
         lock.withdrawn = true;
 
-        SafeERC20.safeTransfer(
-            token,
-            msg.sender,
-            withdrawAmount
-        );
+        SafeERC20.safeTransfer(token, msg.sender, withdrawAmount);
 
-        emit Withdrawal(
-            msg.sender,
-            block.timestamp,
-            withdrawAmount
-        );
+        emit Withdrawal(msg.sender, block.timestamp, withdrawAmount);
     }
 
     function setTokenAddress(address _newTokenAddress) external onlyOwner {
@@ -108,15 +104,19 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     function setDepositDeadline(uint _depositDeadline) external onlyOwner {
-        if(depositDeadline > block.timestamp) revert TokenLockUp_PreviousDeadlineNotEnded();
+        if (depositDeadline > block.timestamp)
+            revert TokenLockUp_PreviousDeadlineNotEnded();
         depositDeadline = _depositDeadline;
     }
 
-    function getUserLockedBatchTokenCount() external view returns(uint) {
+    function getUserLockedBatchTokenCount() external view returns (uint) {
         return locks[msg.sender].length;
     }
 
-    function calculateNftToSend(uint _amount, uint _lockDuration) internal pure returns(uint) {
+    function calculateNftToSend(
+        uint _amount,
+        uint _lockDuration
+    ) internal pure returns (uint) {
         // logic still in the works, will return 2 for test purpose
         return 2;
     }

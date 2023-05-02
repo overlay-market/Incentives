@@ -12,16 +12,9 @@ error TokenLockUp_AmountShouldBeGreaterThanZero();
 error TokenLockUp_LockDurationShouldBeGreaterThanZero();
 
 interface ITokenLockUp {
-    event Deposit(
-        address indexed _addr,
-        uint256 timestamp,
-        uint256 amount
-    );
-    event Withdrawal(
-        address indexed _addr,
-        uint256 timestamp,
-        uint256 amount
-    );
+    event Deposit(address indexed _addr, uint256 timestamp, uint256 amount);
+
+    event Withdrawal(address indexed _addr, uint256 timestamp, uint256 amount);
 
     function pause() external;
 
@@ -42,5 +35,5 @@ interface ITokenLockUp {
     /// @param _lockDuration lock up time.
     function deposit(uint256 _amount, uint _lockDuration) external;
 
-    function getUserLockedBatchTokenCount() external view returns(uint);
+    function getUserLockedBatchTokenCount() external view returns (uint);
 }

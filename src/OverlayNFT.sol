@@ -17,15 +17,11 @@ import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 error OverlayNFT_OnlyStakingContract();
 
 contract OverlayNFT is ERC721, Ownable {
-
     using Strings for uint256;
     using Counters for Counters.Counter;
 
-    event Mint(
-        address indexed _addr,
-        uint256 id
-    );
-    
+    event Mint(address indexed _addr, uint256 id);
+
     string public baseURI;
     uint256 public currentTokenId;
 
@@ -41,11 +37,14 @@ contract OverlayNFT is ERC721, Ownable {
     }
 
     modifier onlyStakingContract() {
-        if(msg.sender != stakingContract) revert OverlayNFT_OnlyStakingContract();
+        if (msg.sender != stakingContract)
+            revert OverlayNFT_OnlyStakingContract();
         _;
     }
 
-    function setStakingContract(address _newStakingContract) external onlyStakingContract {
+    function setStakingContract(
+        address _newStakingContract
+    ) external onlyStakingContract {
         stakingContract = _newStakingContract;
     }
 
@@ -56,13 +55,9 @@ contract OverlayNFT is ERC721, Ownable {
         emit Mint(_recipient, _orderID.current());
     }
 
-    function tokenURI(uint256 _tokenId)
-        public
-        view
-        virtual
-        override
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 _tokenId
+    ) public view virtual override returns (string memory) {
         require(
             ownerOf(_tokenId) != address(0),
             "ERC721Metadata: URI query for nonexistent token"
