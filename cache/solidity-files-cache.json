@@ -799,6 +799,46 @@
         }
       }
     },
+    "lib/openzeppelin-contracts/contracts/security/Pausable.sol": {
+      "lastModificationDate": 1682954922939,
+      "contentHash": "25c8108f36fdd472bc78d4c4af240c11",
+      "sourceName": "lib/openzeppelin-contracts/contracts/security/Pausable.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [
+        "lib/openzeppelin-contracts/contracts/utils/Context.sol"
+      ],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Pausable": {
+          "0.8.13+commit.abaa5c0e.Darwin.appleclang": "Pausable.sol/Pausable.json"
+        }
+      }
+    },
     "lib/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol": {
       "lastModificationDate": 1682927024729,
       "contentHash": "ee1cd296e049da9a26bdb08e23a9036a",
@@ -1199,6 +1239,44 @@
         }
       }
     },
+    "lib/openzeppelin-contracts/contracts/utils/Counters.sol": {
+      "lastModificationDate": 1682954922956,
+      "contentHash": "74654e3ae5d7f39555055dfe244dab7a",
+      "sourceName": "lib/openzeppelin-contracts/contracts/utils/Counters.sol",
+      "solcConfig": {
+        "settings": {
+          "optimizer": {
+            "enabled": true,
+            "runs": 200
+          },
+          "metadata": {
+            "bytecodeHash": "ipfs"
+          },
+          "outputSelection": {
+            "*": {
+              "": [
+                "ast"
+              ],
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers"
+              ]
+            }
+          },
+          "evmVersion": "london",
+          "libraries": {}
+        }
+      },
+      "imports": [],
+      "versionRequirement": "^0.8.0",
+      "artifacts": {
+        "Counters": {
+          "0.8.13+commit.abaa5c0e.Darwin.appleclang": "Counters.sol/Counters.json"
+        }
+      }
+    },
     "lib/openzeppelin-contracts/contracts/utils/Strings.sol": {
       "lastModificationDate": 1682927024737,
       "contentHash": "2f6e4b113762028699e08ee1b6093f0c",
@@ -1446,8 +1524,8 @@
       }
     },
     "src/OverlayNFT.sol": {
-      "lastModificationDate": 1682954923201,
-      "contentHash": "ad4b6ed934ba44db99172316a8c925b1",
+      "lastModificationDate": 1683014007128,
+      "contentHash": "643d3a4f0c93b5146fbaf2e9a9912380",
       "sourceName": "src/OverlayNFT.sol",
       "solcConfig": {
         "settings": {
@@ -1483,6 +1561,7 @@
         "lib/openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol",
         "lib/openzeppelin-contracts/contracts/utils/Address.sol",
         "lib/openzeppelin-contracts/contracts/utils/Context.sol",
+        "lib/openzeppelin-contracts/contracts/utils/Counters.sol",
         "lib/openzeppelin-contracts/contracts/utils/Strings.sol",
         "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol",
         "lib/openzeppelin-contracts/contracts/utils/introspection/IERC165.sol",
@@ -1535,8 +1614,8 @@
       }
     },
     "src/lockUp.sol": {
-      "lastModificationDate": 1682932023846,
-      "contentHash": "86b54e597c91c3d6d8ba54637090275a",
+      "lastModificationDate": 1683015228142,
+      "contentHash": "21ee5206051eb1778be3855b173d9425",
       "sourceName": "src/lockUp.sol",
       "solcConfig": {
         "settings": {
@@ -1566,12 +1645,14 @@
       },
       "imports": [
         "lib/openzeppelin-contracts/contracts/access/Ownable.sol",
+        "lib/openzeppelin-contracts/contracts/security/Pausable.sol",
         "lib/openzeppelin-contracts/contracts/security/ReentrancyGuard.sol",
         "lib/openzeppelin-contracts/contracts/token/ERC20/IERC20.sol",
         "lib/openzeppelin-contracts/contracts/token/ERC20/extensions/IERC20Permit.sol",
         "lib/openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol",
         "lib/openzeppelin-contracts/contracts/utils/Address.sol",
-        "lib/openzeppelin-contracts/contracts/utils/Context.sol"
+        "lib/openzeppelin-contracts/contracts/utils/Context.sol",
+        "src/interfaces/IOverlayNFT.sol"
       ],
       "versionRequirement": "^0.8.13",
       "artifacts": {
@@ -1635,6 +1716,7 @@
         "lib/openzeppelin-contracts/contracts/token/ERC721/extensions/IERC721Metadata.sol",
         "lib/openzeppelin-contracts/contracts/utils/Address.sol",
         "lib/openzeppelin-contracts/contracts/utils/Context.sol",
+        "lib/openzeppelin-contracts/contracts/utils/Counters.sol",
         "lib/openzeppelin-contracts/contracts/utils/Strings.sol",
         "lib/openzeppelin-contracts/contracts/utils/introspection/ERC165.sol",
         "lib/openzeppelin-contracts/contracts/utils/introspection/IERC165.sol",

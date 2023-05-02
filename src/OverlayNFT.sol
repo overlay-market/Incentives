@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.13;
 
-import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 import "openzeppelin-contracts/contracts/utils/Strings.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/utils/Counters.sol";
+import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 
 error OverlayNFT_OnlyStakingContract();
 
@@ -20,6 +20,7 @@ contract OverlayNFT is ERC721, Ownable {
     
     string public baseURI;
     uint256 public currentTokenId;
+
     Counters.Counter public _orderID;
     address public stakingContract;
 
@@ -40,12 +41,11 @@ contract OverlayNFT is ERC721, Ownable {
         stakingContract = _newStakingContract;
     }
 
-    function mintTo(address _recipient) external onlyStakingContract returns (uint256) {
+    function mintTo(address _recipient) external onlyStakingContract {
         _orderID.increment();
         _safeMint(_recipient, _orderID.current());
 
         emit Mint(_recipient, _orderID.current());
-        return newTokenId;
     }
 
     function tokenURI(uint256 _tokenId)
