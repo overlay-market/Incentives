@@ -4,21 +4,21 @@ pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
 import "../src/TestToken.sol";
-import "../src/OverlayNFT.sol";
+import "../src/BelieversNFT.sol";
 import "../src/TokenLockUp.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract TokenLockUpTest is Test {
     // Declare the necessary variables
     IERC20 token;
-    OverlayNFT nftContract;
+    BelieversNFT nftContract;
     TokenLockUp tokenLockUp;
     uint256 lockDuration = 1000;
 
     function setUp() public {
         // Deploy the TokenLockUp contract
         token =  new TestToken();
-        nftContract = new OverlayNFT('_name', '_symbol', '_baseURI');
+        nftContract = new BelieversNFT('_name', '_symbol', '_baseURI');
         tokenLockUp = new TokenLockUp(address(token), address(nftContract));
 
         // Approve the token to be used for deposit

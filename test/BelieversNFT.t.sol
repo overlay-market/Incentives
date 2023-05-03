@@ -2,17 +2,17 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "../src/OverlayNFT.sol";
+import "../src/BelieversNFT.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 
-contract OverlayNFTTests is Test {
+contract BelieversNFTTests is Test {
     using stdStorage for StdStorage;
 
-    OverlayNFT private nft;
+    BelieversNFT private nft;
 
     function setUp() public {
         // Deploy NFT contract
-        nft = new OverlayNFT("NFT_Demo", "ND", "baseUri");
+        nft = new BelieversNFT("NFT_Demo", "ND", "baseUri");
         nft.setStakingContract(address(this));
     }
 

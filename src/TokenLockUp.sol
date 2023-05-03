@@ -9,7 +9,7 @@
 
 pragma solidity ^0.8.13;
 
-import "src/interfaces/IOverlayNFT.sol";
+import "src/interfaces/IBelieversNFT.sol";
 import "src/interfaces/ITokenLockUp.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/security/Pausable.sol";
@@ -20,7 +20,7 @@ import "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define public variables for the ERC20 token and the NFT contract.
     IERC20 public token;
-    IOverlayNFT public nftContract;
+    IBelieversNFT public believersNFT;
 
     // Define a public variable for the deposit deadline.
     uint256 public depositDeadline;
@@ -38,7 +38,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define the constructor of the contract, which initializes the ERC20 token and NFT contract addresses.
     constructor(address _tokenAddress, address _nftAddress) {
         token = IERC20(_tokenAddress);
-        nftContract = IOverlayNFT(_nftAddress);
+        believersNFT = IBelieversNFT(_nftAddress);
     }
 
     /// @inheritdoc ITokenLockUp
@@ -73,7 +73,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // token amount and duration, and mint them.
         uint256 numberOfNftToSend = calculateNftToSend(_amount, _lockDuration);
         for (uint256 i; i < numberOfNftToSend; i++) {
-            nftContract.mintTo(msg.sender);
+            believersNFT.mintTo(msg.sender);
         }
 
         // Emit a Deposit event to signify that a deposit has been made.
@@ -135,7 +135,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
     /// @inheritdoc ITokenLockUp
     function setNftContractnAddress(address _nftAddress) external onlyOwner {
-        nftContract = IOverlayNFT(_nftAddress);
+        believersNFT = IBelieversNFT(_nftAddress);
     }
 
     /// @inheritdoc ITokenLockUp

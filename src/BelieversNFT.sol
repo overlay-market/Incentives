@@ -3,7 +3,7 @@
 /**
  * Created on 2023-05-01 11:39
  * @Summary A smart contract that mints NFTs as reward for the LockUp contract.
- * @title OverlayNFT
+ * @title BelieversNFT
  * @author: Overlay - c-n-o-t-e
  */
 
@@ -14,9 +14,9 @@ import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/utils/Counters.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/ERC721.sol";
 
-error OverlayNFT_OnlyStakingContract();
+error BelieversNFT_OnlyStakingContract();
 
-contract OverlayNFT is ERC721, Ownable {
+contract BelieversNFT is ERC721, Ownable {
     using Strings for uint256;
     using Counters for Counters.Counter;
 
@@ -38,7 +38,7 @@ contract OverlayNFT is ERC721, Ownable {
 
     modifier onlyStakingContract() {
         if (msg.sender != stakingContract)
-            revert OverlayNFT_OnlyStakingContract();
+            revert BelieversNFT_OnlyStakingContract();
         _;
     }
 
