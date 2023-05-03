@@ -83,21 +83,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-    function pause() external {
-        _pause();
-    }
-
-    /// @inheritdoc ITokenLockUp
-    function unpause() external {
-        // If the deposit deadline has passed, revert the transaction.
-        if (block.timestamp >= depositDeadline)
-            revert TokenLockUp_DepositDeadlineNotSet();
-
-        _unpause();
-    }
-
-    /// @inheritdoc ITokenLockUp
-    function withdrawTokens(uint256 _index) external nonReentrant {
+    function withdrawTokens(uint256 _index) public nonReentrant {
         // If the index is invalid, revert the transaction.
         if (_index > locks[msg.sender].length - 1)
             revert TokenLockUp_Invalid_Index();
@@ -125,6 +111,29 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
+    function withdrawAllLockedTokens() external {
+        uint count = getUserLockedBatchTokenCount();
+
+        for (uint i; i < count; i++) {
+            withdrawTokens(i);
+        }
+    }
+
+    /// @inheritdoc ITokenLockUp
+    function pause() external {
+        _pause();
+    }
+
+    /// @inheritdoc ITokenLockUp
+    function unpause() external {
+        // If the deposit deadline has passed, revert the transaction.
+        if (block.timestamp >= depositDeadline)
+            revert TokenLockUp_DepositDeadlineNotSet();
+
+        _unpause();
+    }
+
+    /// @inheritdoc ITokenLockUp
     function setTokenAddress(address _newTokenAddress) external onlyOwner {
         token = IERC20(_newTokenAddress);
     }
@@ -145,7 +154,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-    function getUserLockedBatchTokenCount() external view returns (uint256) {
+    function getUserLockedBatchTokenCount() public view returns (uint256) {
         return locks[msg.sender].length;
     }
 
