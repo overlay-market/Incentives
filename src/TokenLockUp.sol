@@ -3,7 +3,7 @@
 /**
  * Created on 2023-05-02 02:00
  * @Summary A smart contract that let users lock their tokens and get an NFT.
- * @title TokenTokenLockUp
+ * @title TokenLockUp
  * @author: Overlay - c-n-o-t-e
  */
 
@@ -30,7 +30,6 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         uint256 amount;
         uint256 lockDuration;
         uint256 lockStart;
-        bool withdrawn;
     }
 
     // Define a mapping to store the lock details for each user.
@@ -66,8 +65,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
             LockDetails({
                 amount: _amount,
                 lockDuration: _lockDuration,
-                lockStart: block.timestamp,
-                withdrawn: false
+                lockStart: block.timestamp
             })
         );
 
@@ -85,23 +83,20 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     /// @inheritdoc ITokenLockUp
     function withdrawTokens(uint256 _index) public nonReentrant {
         // If the index is invalid, revert the transaction.
-        if (_index > locks[msg.sender].length - 1)
+        if (_index >= locks[msg.sender].length)
             revert TokenLockUp_Invalid_Index();
 
         // Get the lock details
         LockDetails storage lock = locks[msg.sender][_index];
 
-        // Check if tokens have already been withdrawn
-        if (lock.withdrawn) revert TokenLockUp_TokensAlreadyWithdrawn();
-
         // Check if tokens are still locked
         if (block.timestamp < lock.lockStart + lock.lockDuration)
             revert TokenLockUp_TokensAreStillLocked();
-
+        
         uint256 withdrawAmount = lock.amount;
 
-        // Mark the tokens as withdrawn
-        lock.withdrawn = true;
+        locks[msg.sender][_index] = locks[msg.sender][locks[msg.sender].length - 1];
+        locks[msg.sender].pop();
 
         // Transfer the tokens to the user
         SafeERC20.safeTransfer(token, msg.sender, withdrawAmount);
@@ -115,7 +110,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         uint count = getUserLockedBatchTokenCount();
 
         for (uint i; i < count; i++) {
-            withdrawTokens(i);
+            withdrawTokens(0);
         }
     }
 

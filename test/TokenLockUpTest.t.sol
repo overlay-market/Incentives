@@ -53,13 +53,16 @@ contract TokenLockUpTest is Test {
         // Advance the block timestamp to the end of the lockup period
         vm.warp(block.timestamp + lockDuration);
 
+        // Assert that the user has 1 locked batches of tokens
+        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 1);
+
         // Withdraw the tokens
         tokenLockUp.withdrawTokens(0);
 
         uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
 
-        // Assert that the user has 1 locked batches of tokens
-        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 1);
+        // Assert that the user has no locked batches of tokens
+        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 0);
 
         assertEq(userBalanceBeforeDepositTx - 1000, userBalanceAfterDepositTx);
 
@@ -85,13 +88,16 @@ contract TokenLockUpTest is Test {
         // Advance the block timestamp to the end of the lockup period
         vm.warp(block.timestamp + lockDuration);
 
+        // Assert that the user has 2 locked batches of tokens
+        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 2);
+
         // Withdraw the tokens
         tokenLockUp.withdrawAllLockedTokens();
 
         uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
 
-        // Assert that the user has 1 locked batches of tokens
-        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 2);
+        // Assert that the user has no locked batches of tokens
+        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 0);
 
         // Assert that the user has received 1000 tokens
         assertEq(userBalanceAfterBothDepositTx + 200, userBalanceAfterWithdrawTx);
@@ -145,23 +151,6 @@ contract TokenLockUpTest is Test {
     function testFailToDepositWithZeroAmount() public {
         tokenLockUp.setDepositDeadline(block.timestamp);
         tokenLockUp.deposit(0, lockDuration);
-    }
-
-    // Test case for withdrawing already withdrawn tokens
-    function testFailWithWithdrawAlreadyWithdrawnTokens() public {
-        tokenLockUp.setDepositDeadline(block.timestamp);
-        nftContract.setStakingContract(address(tokenLockUp));
-
-        tokenLockUp.deposit(1000, lockDuration);
-
-        // Advance the block timestamp to the end of the lockup period
-        vm.warp(block.timestamp + lockDuration);
-
-        // Withdraw tokens
-        tokenLockUp.withdrawTokens(0);
-
-        // Attempt to withdraw already withdrawn tokens
-        tokenLockUp.withdrawTokens(0);
     }
 
     // Test case for withdrawing with invalid index
