@@ -13,6 +13,7 @@ contract OverlayNFTTests is Test {
     function setUp() public {
         // Deploy NFT contract
         nft = new OverlayNFT("NFT_Demo", "ND", "baseUri");
+        nft.setStakingContract(address(this));
     }
 
     function testFailMintToZeroAddress() public {
