@@ -22,6 +22,9 @@ interface ITokenLockUp {
     /// @notice Unpauses the contract if the deposit deadline has not passed.
     function unpause() external;
 
+    /// @notice Withdraws all users locked token given they've surpass their locked
+    function withdrawAllLockedTokens() external;
+
     /// @notice Allows a user to withdraw their locked tokens if the lock duration has passed.
     /// @param _index key for users struct.
     function withdrawTokens(uint256 _index) external;
