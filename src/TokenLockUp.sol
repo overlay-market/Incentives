@@ -99,7 +99,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     /// @inheritdoc ITokenLockUp
     function withdrawTokens(uint256 _index) external nonReentrant {
         // If the index is invalid, revert the transaction.
-        if (_index > locks[msg.sender].length)
+        if (_index > locks[msg.sender].length - 1)
             revert TokenLockUp_Invalid_Index();
 
         // Get the lock details
