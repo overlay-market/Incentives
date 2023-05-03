@@ -44,7 +44,7 @@ contract OverlayNFT is ERC721, Ownable {
 
     function setStakingContract(
         address _newStakingContract
-    ) external onlyStakingContract {
+    ) external onlyOwner {
         stakingContract = _newStakingContract;
     }
 
