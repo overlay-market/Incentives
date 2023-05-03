@@ -115,25 +115,19 @@ contract TokenLockUpTest is Test {
 
     function testPause() public {
         tokenLockUp.pause();
-
         assert(tokenLockUp.paused());
     }
 
     function testUnpause() public {
         tokenLockUp.pause();
-
-        assert(tokenLockUp.paused());
-
-        // Try to unpause before deposit deadline
         tokenLockUp.setDepositDeadline(block.timestamp + 100);
-        tokenLockUp.unpause();
 
+        tokenLockUp.unpause();
         assert(!tokenLockUp.paused());
     }
 
     function testFailToUnpauseAfterDeadlinePassed() public {
         tokenLockUp.pause();
-        tokenLockUp.setDepositDeadline(block.timestamp);
         tokenLockUp.unpause();
     }
 
