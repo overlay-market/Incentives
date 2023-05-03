@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: UNLICENSED
+
+pragma solidity ^0.8.13;
+
 import "forge-std/Test.sol";
 import "../src/TestToken.sol";
 import "../src/OverlayNFT.sol";
@@ -63,6 +67,36 @@ contract TokenLockUpTest is Test {
         assertEq(userBalanceAfterDepositTx + 1000, userBalanceAfterWithdrawTx);
     }
 
+    function testWithdrawAllLockedTokens() public {
+        tokenLockUp.setDepositDeadline(100000);
+        nftContract.setStakingContract(address(tokenLockUp));
+
+        uint userBalanceBeforeDepositTx = token.balanceOf(address(this));
+
+        // Deposit 100 tokens with a lockup period of 1000 seconds
+        tokenLockUp.deposit(100, lockDuration);
+
+        // Advance the block timestamp to the end of the lockup period
+        vm.warp(block.timestamp + lockDuration);
+
+        tokenLockUp.deposit(100, lockDuration);
+        uint userBalanceAfterBothDepositTx = token.balanceOf(address(this));
+
+        // Advance the block timestamp to the end of the lockup period
+        vm.warp(block.timestamp + lockDuration);
+
+        // Withdraw the tokens
+        tokenLockUp.withdrawAllLockedTokens();
+
+        uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
+
+        // Assert that the user has 1 locked batches of tokens
+        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 2);
+
+        // Assert that the user has received 1000 tokens
+        assertEq(userBalanceAfterBothDepositTx + 200, userBalanceAfterWithdrawTx);
+    }
+
     function testFailToWithdrawBeforeTokensAreUnlock() public {
         uint256 amount = 1000;
 
@@ -98,10 +132,6 @@ contract TokenLockUpTest is Test {
     }
 
     function testFailWhenDepositingAfterDeadline() public {
-        tokenLockUp.setDepositDeadline(block.timestamp);
-
-        // Advance the block timestamp to the end of the lockup period
-        vm.warp(block.timestamp + lockDuration);
         tokenLockUp.deposit(1000, 100);
     }
 
