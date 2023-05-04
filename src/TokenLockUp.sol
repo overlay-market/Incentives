@@ -9,8 +9,8 @@
 
 pragma solidity ^0.8.13;
 
-import "src/interfaces/IBelieversNFT.sol";
 import "src/interfaces/ITokenLockUp.sol";
+import "src/interfaces/IPowerCardNFTs.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/security/Pausable.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
@@ -20,10 +20,13 @@ import "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define public variables for the ERC20 token and the NFT contract.
     IERC20 public token;
-    IBelieversNFT public believersNFT;
+    IPowerCardNFTs public powerCardNFT;
 
     // Define a public variable for the deposit deadline.
     uint256 public depositDeadline;
+
+    bytes32 constant MINTER_ROLE = keccak256("MINTER");
+    bytes32 constant BURNER_ROLE = keccak256("BURNER");
 
     // Define a struct called LockDetails that contains details of a user's locked tokens.
     struct LockDetails {
@@ -38,7 +41,11 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define the constructor of the contract, which initializes the ERC20 token and NFT contract addresses.
     constructor(address _tokenAddress, address _nftAddress) {
         token = IERC20(_tokenAddress);
-        believersNFT = IBelieversNFT(_nftAddress);
+        powerCardNFT = IPowerCardNFTs(_nftAddress);
+
+        // grant contract mint and burn priveleges on power card NFTs
+        powerCardNFT.grantRole(MINTER_ROLE, address(this));
+        powerCardNFT.grantRole(BURNER_ROLE, address(this));
     }
 
     /// @inheritdoc ITokenLockUp
@@ -71,10 +78,10 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
         // Calculate the number of NFTs to send to the user based on the locked
         // token amount and duration, and mint them.
-        uint256 numberOfNftToSend = calculateNftToSend(_amount, _lockDuration);
-        for (uint256 i; i < numberOfNftToSend; i++) {
-            believersNFT.mintTo(msg.sender);
-        }
+
+        uint256 amountOfNftToSend = calculateNftAmountToSend(_amount, _lockDuration);
+        powerCardNFT.mint(msg.sender, powerCardNFT.believersNFT(), amountOfNftToSend);
+        
 
         // Emit a Deposit event to signify that a deposit has been made.
         emit Deposit(msg.sender, block.timestamp + _lockDuration, _amount);
@@ -115,12 +122,12 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-    function pause() external {
+    function pause() external onlyOwner {
         _pause();
     }
 
     /// @inheritdoc ITokenLockUp
-    function unpause() external {
+    function unpause() external onlyOwner {
         // If the deposit deadline has passed, revert the transaction.
         if (block.timestamp >= depositDeadline)
             revert TokenLockUp_DepositDeadlineNotSet();
@@ -135,7 +142,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
     /// @inheritdoc ITokenLockUp
     function setNftContractnAddress(address _nftAddress) external onlyOwner {
-        believersNFT = IBelieversNFT(_nftAddress);
+        powerCardNFT = IPowerCardNFTs(_nftAddress);
     }
 
     /// @inheritdoc ITokenLockUp
@@ -156,11 +163,11 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     /// @notice Allows the owner to set the deposit deadline.
     /// @param _amount amount deposited by user.
     /// @param _lockDuration lock up duration set by user.
-    function calculateNftToSend(
+    function calculateNftAmountToSend(
         uint256 _amount,
         uint256 _lockDuration
     ) internal pure returns (uint256) {
-        // logic still in the works, will return 2 for test purpose
-        return 2;
+        uint256 getDays = _lockDuration / 1 days;
+        return (_amount * getDays);
     }
 }
