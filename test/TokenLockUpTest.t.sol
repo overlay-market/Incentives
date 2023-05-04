@@ -74,8 +74,6 @@ contract TokenLockUpTest is Test {
         tokenLockUp.setDepositDeadline(100000);
         nftContract.setStakingContract(address(tokenLockUp));
 
-        uint userBalanceBeforeDepositTx = token.balanceOf(address(this));
-
         // Deposit 100 tokens with a lockup period of 1000 seconds
         tokenLockUp.deposit(100, lockDuration);
 

@@ -79,9 +79,15 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Calculate the number of NFTs to send to the user based on the locked
         // token amount and duration, and mint them.
 
-        uint256 amountOfNftToSend = calculateNftAmountToSend(_amount, _lockDuration);
-        powerCardNFT.mint(msg.sender, powerCardNFT.believersNFT(), amountOfNftToSend);
-        
+        uint256 amountOfNftToSend = calculateNftAmountToSend(
+            _amount,
+            _lockDuration
+        );
+        powerCardNFT.mint(
+            msg.sender,
+            powerCardNFT.believersNFT(),
+            amountOfNftToSend
+        );
 
         // Emit a Deposit event to signify that a deposit has been made.
         emit Deposit(msg.sender, block.timestamp + _lockDuration, _amount);
@@ -99,10 +105,12 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Check if tokens are still locked
         if (block.timestamp < lock.lockStart + lock.lockDuration)
             revert TokenLockUp_TokensAreStillLocked();
-        
+
         uint256 withdrawAmount = lock.amount;
 
-        locks[msg.sender][_index] = locks[msg.sender][locks[msg.sender].length - 1];
+        locks[msg.sender][_index] = locks[msg.sender][
+            locks[msg.sender].length - 1
+        ];
         locks[msg.sender].pop();
 
         // Transfer the tokens to the user
