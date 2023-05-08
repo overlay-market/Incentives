@@ -1,43 +1,51 @@
 // SPDX-License-Identifier: MIT
 
+/**
+ * Created on 2023-05-02 02:00
+ * @Summary A smart contract that let users redeem NFTs with points earned for locking OVL
+ * @title OverlayNFTs
+ * @author: Overlay - c-n-o-t-e
+ */
+
 pragma solidity ^0.8.13;
 
-import "src/interfaces/IPowerCardNFTs.sol";
+import "src/interfaces/IOverlayNFTs.sol";
 import "openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol";
 import "openzeppelin-contracts/contracts/access/AccessControlEnumerable.sol";
 
-contract PowerCardNFTs is IPowerCardNFTs, AccessControlEnumerable, ERC1155 {
+contract OverlayNFTs is IOverlayNFTs, AccessControlEnumerable, ERC1155 {
     string public name;
     string public symbol;
-
-    uint256 public PowerCard = 2;
-    uint256 public believersNFT = 1;
 
     mapping(uint => string) public tokenURI;
     mapping(uint256 => uint256) public totalSupply;
 
+    // Default value is the first element listed in
+    // definition of the type, in this case "Pending"
+    NFTS public nfts;
+
     constructor() ERC1155("") {
-        symbol = "PCN";
-        name = "PowerCardNFTs";
+        symbol = "NIPS";
+        name = "OverlayNFTs";
 
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     modifier onlyMinter() {
         if (!hasRole(keccak256("MINTER"), msg.sender))
-            revert PowerCardNFTs_NotMinter();
+            revert OverlayNFTs_NotMinter();
         _;
     }
 
     modifier onlyBurner() {
         if (!hasRole(keccak256("BURNER"), msg.sender))
-            revert PowerCardNFTs_NotBurner();
+            revert OverlayNFTs_NotBurner();
         _;
     }
 
     modifier onlyAdmin() {
         if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender))
-            revert PowerCardNFTs_NotBurner();
+            revert OverlayNFTs_NotBurner();
         _;
     }
 
@@ -87,14 +95,13 @@ contract PowerCardNFTs is IPowerCardNFTs, AccessControlEnumerable, ERC1155 {
         return tokenURI[_id];
     }
 
-    function redeemPowerCardNFT(
-        uint256 _burnId,
-        uint256 _burnAmount,
-        uint256 _mintId
+    function redeemOverlayNFT(
+        uint256 _pointsToBurn,
+        uint256 _nftToRedeem
     ) external {
         // Todo
-        // check if users believersNFT _burnAmount is eligible to redeem NFT revert if not
-        // if eligible burn _burnAmount and mint powerCardNFT and calculated amount
+        // check if users points earned is eligible to redeem NFT revert if not
+        // if eligible calculated amount and mint NFT
     }
 
     function supportsInterface(
