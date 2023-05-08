@@ -2,7 +2,7 @@
 
 /**
  * Created on 2023-05-02 02:00
- * @Summary A smart contract that let users lock their tokens and get an NFT.
+ * @Summary A smart contract that let users lock their tokens and receive points.
  * @title TokenLockUp
  * @author: Overlay - c-n-o-t-e
  */
@@ -10,7 +10,7 @@
 pragma solidity ^0.8.13;
 
 import "src/interfaces/ITokenLockUp.sol";
-import "src/interfaces/IPowerCardNFTs.sol";
+import "src/interfaces/IOverlayNFTs.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
 import "openzeppelin-contracts/contracts/security/Pausable.sol";
 import "openzeppelin-contracts/contracts/token/ERC20/IERC20.sol";
@@ -20,7 +20,7 @@ import "openzeppelin-contracts/contracts/token/ERC20/utils/SafeERC20.sol";
 contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define public variables for the ERC20 token and the NFT contract.
     IERC20 public token;
-    IPowerCardNFTs public powerCardNFT;
+    IOverlayNFTs public OverlayNFT;
 
     // Define a public variable for the deposit deadline.
     uint256 public depositDeadline;
@@ -142,7 +142,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
     /// @inheritdoc ITokenLockUp
     function setNftContractnAddress(address _nftAddress) external onlyOwner {
-        powerCardNFT = IPowerCardNFTs(_nftAddress);
+        OverlayNFT = IOverlayNFTs(_nftAddress);
     }
 
     /// @inheritdoc ITokenLockUp
