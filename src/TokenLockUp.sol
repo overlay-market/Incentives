@@ -112,6 +112,10 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         emit Withdrawal(msg.sender, block.timestamp, withdrawAmount);
     }
 
+    function updateUserPoints(address _userAddress, uint256 _pointsToReduce) external onlyOverlayNFTContract {
+        earnedPoints[_userAddress] -= _pointsToReduce;
+    }
+
     /// @inheritdoc ITokenLockUp
     function withdrawAllLockedTokens() external {
         uint count = getUserLockedBatchTokenCount();

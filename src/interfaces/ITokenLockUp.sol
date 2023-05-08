@@ -56,4 +56,9 @@ interface ITokenLockUp {
     /// @notice Allows the user to get the count of their locked token batches.
     /// @return uints256 Total locked count.
     function getUserLockedBatchTokenCount() external view returns (uint256);
+
+    /// @notice Used to reduce users points after they redeem an NFT from the OverlayNFT contract.
+    /// @param _userAddress User address whose points are to be reduced.
+    /// @param _pointsToReduce amount of points to be subtracted.
+    function updateUserPoints(address _userAddress, uint256 _pointsToReduce) external
 }
