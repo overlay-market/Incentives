@@ -23,7 +23,14 @@ contract OverlayNFTs is IOverlayNFTs, AccessControlEnumerable, ERC1155 {
     mapping(uint => string) public tokenURI;
     mapping(uint256 => uint256) public totalSupply;
 
-    NFTS public nfts;
+    // Contains details of contract NFTs.
+    struct NFTs {
+        uint256 nftID;
+        string nameOfNFT;
+    }
+
+    // Stores details for each nft.
+    NFTs[] public nft;
 
     constructor() ERC1155("") {
         symbol = "NIPS";
@@ -52,6 +59,11 @@ contract OverlayNFTs is IOverlayNFTs, AccessControlEnumerable, ERC1155 {
 
     function setTokenLockUpAddress(address _addr) external onlyAdmin {
         tokenLockUp = ITokenLockUp(_addr);
+    }
+
+    function addNewNftId(string memory _nameOfNFT) external onlyAdmin {
+        uint256 newID = nft.length;
+        nft.push(NFTs({nftID: newID, nameOfNFT: _nameOfNFT}));
     }
 
     function mint(
