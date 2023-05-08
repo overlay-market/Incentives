@@ -35,6 +35,9 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define a mapping to store the lock details for each user.
     mapping(address => LockDetails[]) public locks;
 
+    // Define a mapping to store points earned for each user.
+    mapping(address => uint256) public earnedPoints;
+
     // Define the constructor of the contract, which initializes the ERC20 token and NFT contract addresses.
     constructor(address _tokenAddress) {
         token = IERC20(_tokenAddress);
@@ -75,6 +78,8 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
             _amount,
             _lockDuration
         );
+
+        earnedPoints[msg.sender] += pointsEarned;
 
         // Emit a Deposit event to signify that a deposit has been made.
         emit Deposit(msg.sender, block.timestamp + _lockDuration, _amount);
