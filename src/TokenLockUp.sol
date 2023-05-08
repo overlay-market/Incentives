@@ -25,9 +25,6 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define a public variable for the deposit deadline.
     uint256 public depositDeadline;
 
-    bytes32 constant MINTER_ROLE = keccak256("MINTER");
-    bytes32 constant BURNER_ROLE = keccak256("BURNER");
-
     // Define a struct called LockDetails that contains details of a user's locked tokens.
     struct LockDetails {
         uint256 amount;
@@ -39,13 +36,8 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     mapping(address => LockDetails[]) public locks;
 
     // Define the constructor of the contract, which initializes the ERC20 token and NFT contract addresses.
-    constructor(address _tokenAddress, address _nftAddress) {
+    constructor(address _tokenAddress) {
         token = IERC20(_tokenAddress);
-        powerCardNFT = IPowerCardNFTs(_nftAddress);
-
-        // grant contract mint and burn priveleges on power card NFTs
-        powerCardNFT.grantRole(MINTER_ROLE, address(this));
-        powerCardNFT.grantRole(BURNER_ROLE, address(this));
     }
 
     /// @inheritdoc ITokenLockUp
@@ -79,14 +71,9 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Calculate the number of NFTs to send to the user based on the locked
         // token amount and duration, and mint them.
 
-        uint256 amountOfNftToSend = calculateNftAmountToSend(
+        uint256 pointsEarned = calculateNftAmountToSend(
             _amount,
             _lockDuration
-        );
-        powerCardNFT.mint(
-            msg.sender,
-            powerCardNFT.believersNFT(),
-            amountOfNftToSend
         );
 
         // Emit a Deposit event to signify that a deposit has been made.
