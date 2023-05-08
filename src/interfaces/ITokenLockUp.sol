@@ -4,6 +4,7 @@ pragma solidity 0.8.13;
 error TokenLockUp_Invalid_Index();
 error TokenLockUp_TokensAreStillLocked();
 error TokenLockUp_DepositDeadlineNotSet();
+error TokenLockUp_NotOverlayNftContract();
 error TokenLockUp_DepositDeadlineReached();
 error TokenLockUp_TokensAlreadyWithdrawn();
 error TokenLockUp_PreviousDeadlineNotEnded();
@@ -60,5 +61,5 @@ interface ITokenLockUp {
     /// @notice Used to reduce users points after they redeem an NFT from the OverlayNFT contract.
     /// @param _userAddress User address whose points are to be reduced.
     /// @param _pointsToReduce amount of points to be subtracted.
-    function updateUserPoints(address _userAddress, uint256 _pointsToReduce) external
+    function updateUserPoints(address _userAddress, uint256 _pointsToReduce) external;
 }

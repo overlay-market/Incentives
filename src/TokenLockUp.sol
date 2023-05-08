@@ -43,6 +43,12 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         token = IERC20(_tokenAddress);
     }
 
+    modifier onlyOverlayNFTContract() {
+        if ( msg.sender != address(OverlayNFT))
+            revert TokenLockUp_NotOverlayNftContract();
+        _;
+    }
+
     /// @inheritdoc ITokenLockUp
     function deposit(
         uint256 _amount,
