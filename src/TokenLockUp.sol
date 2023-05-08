@@ -2,7 +2,7 @@
 
 /**
  * Created on 2023-05-02 02:00
- * @Summary A smart contract that let users lock their tokens and receive points.
+ * @Summary A smart contract that let users lock their tokens and receive points which are used to redeem NFTs on OverlayNFTs contract
  * @title TokenLockUp
  * @author: Overlay - c-n-o-t-e
  */
@@ -74,7 +74,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Calculate the number of NFTs to send to the user based on the locked
         // token amount and duration, and mint them.
 
-        uint256 pointsEarned = calculateNftAmountToSend(
+        uint256 pointsEarned = calculatePointsToGive(
             _amount,
             _lockDuration
         );
@@ -163,7 +163,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     /// @notice Allows the owner to set the deposit deadline.
     /// @param _amount amount deposited by user.
     /// @param _lockDuration lock up duration set by user.
-    function calculateNftAmountToSend(
+    function calculatePointsToGive(
         uint256 _amount,
         uint256 _lockDuration
     ) internal pure returns (uint256) {
