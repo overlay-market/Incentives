@@ -13,7 +13,7 @@ contract TokenLockUpTest is Test {
     IERC20 token;
     BelieversNFT nftContract;
     TokenLockUp tokenLockUp;
-    uint256 lockDuration = 1000;
+    uint256 lockDuration = 2 days;
 
     function setUp() public {
         // Deploy the TokenLockUp contract
@@ -26,7 +26,7 @@ contract TokenLockUpTest is Test {
     }
 
     function testDeposit() public {
-        tokenLockUp.setDepositDeadline(10000);
+        tokenLockUp.setDepositDeadline(3 days);
         nftContract.setStakingContract(address(tokenLockUp));
 
         // Deposit 1000 tokens with a lockup period of 1000 seconds
@@ -40,7 +40,7 @@ contract TokenLockUpTest is Test {
     }
 
     function testWithdrawTokens() public {
-        tokenLockUp.setDepositDeadline(10000);
+        tokenLockUp.setDepositDeadline(3 days);
         nftContract.setStakingContract(address(tokenLockUp));
 
         uint userBalanceBeforeDepositTx = token.balanceOf(address(this));
@@ -71,7 +71,7 @@ contract TokenLockUpTest is Test {
     }
 
     function testWithdrawAllLockedTokens() public {
-        tokenLockUp.setDepositDeadline(100000);
+        tokenLockUp.setDepositDeadline(3 days);
         nftContract.setStakingContract(address(tokenLockUp));
 
         // Deposit 100 tokens with a lockup period of 1000 seconds
@@ -97,14 +97,14 @@ contract TokenLockUpTest is Test {
         // Assert that the user has no locked batches of tokens
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 0);
 
-        // Assert that the user has received 1000 tokens
+        // Assert that the user has received 200 tokens extra
         assertEq(userBalanceAfterBothDepositTx + 200, userBalanceAfterWithdrawTx);
     }
 
     function testFailToWithdrawBeforeTokensAreUnlock() public {
         uint256 amount = 1000;
 
-        tokenLockUp.setDepositDeadline(10000);
+        tokenLockUp.setDepositDeadline(3 days);
         nftContract.setStakingContract(address(tokenLockUp));
 
         tokenLockUp.deposit(amount, lockDuration);
