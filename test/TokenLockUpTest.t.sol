@@ -19,7 +19,7 @@ contract TokenLockUpTest is Test {
         // Deploy the TokenLockUp contract
         token =  new TestToken();
         nftContract = new BelieversNFT('_name', '_symbol', '_baseURI');
-        tokenLockUp = new TokenLockUp(address(token), address(nftContract));
+        tokenLockUp = new TokenLockUp(address(token));
 
         // Approve the token to be used for deposit
         token.approve(address(tokenLockUp), 1000);
@@ -30,10 +30,10 @@ contract TokenLockUpTest is Test {
         nftContract.setStakingContract(address(tokenLockUp));
 
         // Deposit 1000 tokens with a lockup period of 1000 seconds
-        tokenLockUp.deposit(1000, lockDuration);
+        tokenLockUp.deposit(1000, 2 days);
 
-        // Assert that the user has received 2 NFTs
-        assertEq(nftContract.balanceOf(address(this)), 2);
+        // Assert that the user has received the right points
+        assertEq(tokenLockUp.earnedPoints(address(this)), 1000 * 2);
 
         // Assert that the user has 1 locked batch of tokens
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 1);
