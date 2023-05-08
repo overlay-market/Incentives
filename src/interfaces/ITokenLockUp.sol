@@ -12,8 +12,10 @@ error TokenLockUp_AmountShouldBeGreaterThanZero();
 error TokenLockUp_LockDurationShouldBeGreaterThanZero();
 
 interface ITokenLockUp {
+    /// @notice Emits an event whenever the deposit function is called.
     event Deposit(address indexed _addr, uint256 timestamp, uint256 amount);
 
+    /// @notice Emits an event whenever the withdraw function is called.
     event Withdrawal(address indexed _addr, uint256 timestamp, uint256 amount);
 
     /// @notice Pauses the contract.
@@ -26,26 +28,32 @@ interface ITokenLockUp {
     function withdrawAllLockedTokens() external;
 
     /// @notice Allows a user to withdraw their locked tokens if the lock duration has passed.
-    /// @param _index key for users struct.
+    /// @param _index Key for users struct.
     function withdrawTokens(uint256 _index) external;
 
     /// @notice Allows the owner to set the deposit deadline.
-    /// @param _depositDeadline new nft address.
+    /// @param _depositDeadline New nft address.
     function setDepositDeadline(uint256 _depositDeadline) external;
 
     /// @notice Allows the owner to set the address of the token contract.
-    /// @param _newTokenAddress new token address.
+    /// @param _newTokenAddress New token address.
     function setTokenAddress(address _newTokenAddress) external;
 
     /// @notice Allows the owner to set the address of the NFT contract.
-    /// @param _nftAddress new nft address.
+    /// @param _nftAddress New nft address.
     function setNftContractnAddress(address _nftAddress) external;
 
     /// @notice Allows a user to lock up their tokens for a specified duration in exchange for NFTs.
-    /// @param _amount amount to deposit.
-    /// @param _lockDuration lock up time.
+    /// @param _amount Amount to deposit.
+    /// @param _lockDuration Lock up time.
     function deposit(uint256 _amount, uint256 _lockDuration) external;
 
+    /// @notice Allows the user to get their total points earned
+    /// @param _userAddress User's address
+    /// @return uints256 Points earned from locking OVL
+    function earnedPoints(address _userAddress) external view returns (uint256);
+
     /// @notice Allows the user to get the count of their locked token batches.
+    /// @return uints256 Total locked count.
     function getUserLockedBatchTokenCount() external view returns (uint256);
 }
