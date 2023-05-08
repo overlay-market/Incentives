@@ -50,7 +50,7 @@ contract OverlayNFTs is IOverlayNFTs, AccessControlEnumerable, ERC1155 {
         _;
     }
 
-    function setTokenLockUpAddress(address _addr) external onlyAdmin() {
+    function setTokenLockUpAddress(address _addr) external onlyAdmin {
         tokenLockUp = ITokenLockUp(_addr);
     }
 

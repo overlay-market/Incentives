@@ -44,7 +44,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     modifier onlyOverlayNFTContract() {
-        if ( msg.sender != address(OverlayNFT))
+        if (msg.sender != address(OverlayNFT))
             revert TokenLockUp_NotOverlayNftContract();
         _;
     }
@@ -80,10 +80,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Calculate the number of NFTs to send to the user based on the locked
         // token amount and duration, and mint them.
 
-        uint256 pointsEarned = calculatePointsToGive(
-            _amount,
-            _lockDuration
-        );
+        uint256 pointsEarned = calculatePointsToGive(_amount, _lockDuration);
 
         earnedPoints[msg.sender] += pointsEarned;
 
@@ -118,7 +115,10 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         emit Withdrawal(msg.sender, block.timestamp, withdrawAmount);
     }
 
-    function updateUserPoints(address _userAddress, uint256 _pointsToReduce) external onlyOverlayNFTContract {
+    function updateUserPoints(
+        address _userAddress,
+        uint256 _pointsToReduce
+    ) external onlyOverlayNFTContract {
         earnedPoints[_userAddress] -= _pointsToReduce;
     }
 

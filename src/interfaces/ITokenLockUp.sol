@@ -61,5 +61,8 @@ interface ITokenLockUp {
     /// @notice Used to reduce users points after they redeem an NFT from the OverlayNFT contract.
     /// @param _userAddress User address whose points are to be reduced.
     /// @param _pointsToReduce amount of points to be subtracted.
-    function updateUserPoints(address _userAddress, uint256 _pointsToReduce) external;
+    function updateUserPoints(
+        address _userAddress,
+        uint256 _pointsToReduce
+    ) external;
 }
