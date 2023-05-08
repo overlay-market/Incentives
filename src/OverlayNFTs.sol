@@ -10,6 +10,7 @@
 pragma solidity ^0.8.13;
 
 import "src/interfaces/IOverlayNFTs.sol";
+import "src/interfaces/ITokenLockUp.sol";
 import "openzeppelin-contracts/contracts/token/ERC1155/ERC1155.sol";
 import "openzeppelin-contracts/contracts/access/AccessControlEnumerable.sol";
 
@@ -17,11 +18,11 @@ contract OverlayNFTs is IOverlayNFTs, AccessControlEnumerable, ERC1155 {
     string public name;
     string public symbol;
 
+    ITokenLockUp public tokenLockUp;
+
     mapping(uint => string) public tokenURI;
     mapping(uint256 => uint256) public totalSupply;
 
-    // Default value is the first element listed in
-    // definition of the type, in this case "Pending"
     NFTS public nfts;
 
     constructor() ERC1155("") {
@@ -47,6 +48,10 @@ contract OverlayNFTs is IOverlayNFTs, AccessControlEnumerable, ERC1155 {
         if (!hasRole(DEFAULT_ADMIN_ROLE, msg.sender))
             revert OverlayNFTs_NotBurner();
         _;
+    }
+
+    function setTokenLockUpAddress(address _addr) external {
+        tokenLockUp = ITokenLockUp(_addr);
     }
 
     function mint(
@@ -96,7 +101,7 @@ contract OverlayNFTs is IOverlayNFTs, AccessControlEnumerable, ERC1155 {
     }
 
     function redeemOverlayNFT(
-        uint256 _pointsToBurn,
+        uint256 _pointsToReduce,
         uint256 _nftToRedeem
     ) external {
         // Todo
