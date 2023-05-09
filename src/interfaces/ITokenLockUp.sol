@@ -2,6 +2,7 @@
 pragma solidity 0.8.13;
 
 error TokenLockUp_Invalid_Index();
+error TokenLockUp_AmountCannotBeZero();
 error TokenLockUp_TokensAreStillLocked();
 error TokenLockUp_DepositDeadlineNotSet();
 error TokenLockUp_NotOverlayNftContract();
