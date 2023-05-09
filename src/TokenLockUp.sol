@@ -154,7 +154,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-    function withdrawAllAvailableTokens() external {
+    function withdrawAllAvailableTokens() external nonReentrant {
         (
             uint256 withdrawableAmount,
             uint256[] memory indexToWithdraw
