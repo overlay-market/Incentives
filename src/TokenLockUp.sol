@@ -122,6 +122,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         emit Withdrawal(msg.sender, block.timestamp, withdrawAmount);
     }
 
+    /// @inheritdoc ITokenLockUp
     function updateUserPoints(
         address _userAddress,
         uint256 _pointsToReduce
@@ -129,6 +130,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         earnedPoints[_userAddress] -= _pointsToReduce;
     }
 
+    /// @inheritdoc ITokenLockUp
     function getAllWithdrawAbleBatchTokens()
         public
         view
@@ -139,11 +141,13 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         uint256 count = getUserLockedBatchTokenCount();
 
         for (uint256 i; i < count; i++) {
+            // Check if amount is above zero and if lock up duration has passed.
             if (
                 lock.user[i].amount > 0 &&
                 block.timestamp <
                 lock.user[i].lockStart + lock.user[i].lockDuration
             ) {
+                // Record the index of amount store.
                 indexToWithdraw[id] = i;
                 withdrawableAmount += lock.user[i].amount;
                 id++;
@@ -166,9 +170,11 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Get the lock details by reading via memory
         LockDetails memory lock = locks[msg.sender];
 
+        // checks if total amount locked by user is
         if (lock.totalAmountLocked == 0) {
             delete locks[msg.sender];
         } else {
+            // If not zero reset the amounts that are been withdrawn to zero
             for (uint256 i; i < indexToWithdraw.length; i++) {
                 locks[msg.sender].user[indexToWithdraw[i]].amount = 0;
             }

@@ -62,4 +62,12 @@ interface ITokenLockUp {
         address _userAddress,
         uint256 _pointsToReduce
     ) external;
+
+    /// @notice Used to return the withdrawable amount and their index a user has.
+    /// @return withdrawableAmount total amount to withdraw.
+    /// @return indexToWithdraw index of withdrawable amount.
+    function getAllWithdrawAbleBatchTokens()
+        external
+        view
+        returns (uint256 withdrawableAmount, uint256[] memory indexToWithdraw);
 }
