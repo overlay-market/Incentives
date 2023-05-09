@@ -26,15 +26,11 @@ interface ITokenLockUp {
     function unpause() external;
 
     /// @notice Withdraws all users locked token given they've surpass their locked
-    function withdrawAllLockedTokens() external;
+    function withdrawAllAvailableTokens() external;
 
     /// @notice Allows a user to withdraw their locked tokens if the lock duration has passed.
     /// @param _index Key for users struct.
     function withdrawTokens(uint256 _index) external;
-
-    /// @notice Allows the owner to set the deposit deadline.
-    /// @param _depositDeadline New nft address.
-    function setDepositDeadline(uint256 _depositDeadline) external;
 
     /// @notice Allows the owner to set the address of the token contract.
     /// @param _newTokenAddress New token address.

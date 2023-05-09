@@ -22,18 +22,20 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     IERC20 public token;
     IOverlayNFTs public OverlayNFT;
 
-    // Define a public variable for the deposit deadline.
-    uint256 public depositDeadline;
-
     // Define a struct called LockDetails that contains details of a user's locked tokens.
     struct LockDetails {
+        uint256 totalAmountLocked;
+        UserDetails[] user;
+    }
+
+    struct UserDetails {
         uint256 amount;
         uint256 lockDuration;
         uint256 lockStart;
     }
 
     // Define a mapping to store the lock details for each user.
-    mapping(address => LockDetails[]) public locks;
+    mapping(address => LockDetails) public locks;
 
     // Define a mapping to store points earned for each user.
     mapping(address => uint256) public earnedPoints;
@@ -54,10 +56,6 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         uint256 _amount,
         uint256 _lockDuration
     ) external nonReentrant whenNotPaused {
-        // If the deposit deadline has passed, revert the transaction.
-        if (block.timestamp > depositDeadline)
-            revert TokenLockUp_DepositDeadlineReached();
-
         // If the lock duration is 0, revert the transaction.
         if (_lockDuration == 0)
             revert TokenLockUp_LockDurationShouldBeGreaterThanZero();
@@ -68,9 +66,12 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Transfer the tokens from the user to the contract.
         SafeERC20.safeTransferFrom(token, msg.sender, address(this), _amount);
 
-        // Add the lock details to the mapping for the user.
-        locks[msg.sender].push(
-            LockDetails({
+        LockDetails storage lock = locks[msg.sender];
+
+        lock.totalAmountLocked += _amount;
+
+        lock.user.push(
+            UserDetails({
                 amount: _amount,
                 lockDuration: _lockDuration,
                 lockStart: block.timestamp
@@ -91,22 +92,25 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     /// @inheritdoc ITokenLockUp
     function withdrawTokens(uint256 _index) public nonReentrant {
         // If the index is invalid, revert the transaction.
-        if (_index >= locks[msg.sender].length)
+        if (_index >= locks[msg.sender].user.length)
             revert TokenLockUp_Invalid_Index();
 
-        // Get the lock details
-        LockDetails storage lock = locks[msg.sender][_index];
+        // Get the lock details by reading via memory
+        LockDetails memory lock = locks[msg.sender];
 
         // Check if tokens are still locked
-        if (block.timestamp < lock.lockStart + lock.lockDuration)
-            revert TokenLockUp_TokensAreStillLocked();
+        if (
+            block.timestamp <
+            lock.user[_index].lockStart + lock.user[_index].lockDuration
+        ) revert TokenLockUp_TokensAreStillLocked();
 
-        uint256 withdrawAmount = lock.amount;
+        uint256 withdrawAmount = lock.user[_index].amount;
 
-        locks[msg.sender][_index] = locks[msg.sender][
-            locks[msg.sender].length - 1
-        ];
-        locks[msg.sender].pop();
+        // modifying the state value
+        locks[msg.sender].user[_index].amount = 0;
+        locks[msg.sender].totalAmountLocked -= withdrawAmount;
+
+        if (lock.totalAmountLocked == 0) delete locks[msg.sender];
 
         // Transfer the tokens to the user
         SafeERC20.safeTransfer(token, msg.sender, withdrawAmount);
@@ -122,13 +126,56 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         earnedPoints[_userAddress] -= _pointsToReduce;
     }
 
-    /// @inheritdoc ITokenLockUp
-    function withdrawAllLockedTokens() external {
-        uint count = getUserLockedBatchTokenCount();
+    function getAllWithdrawAbleBatchTokens()
+        public
+        view
+        returns (uint256 withdrawableAmount, uint256[] memory indexToWithdraw)
+    {
+        uint256 id;
+        LockDetails memory lock = locks[msg.sender];
+        uint256 count = getUserLockedBatchTokenCount();
 
-        for (uint i; i < count; i++) {
-            withdrawTokens(0);
+        for (uint256 i; i < count; i++) {
+            if (
+                lock.user[i].amount > 0 &&
+                block.timestamp <
+                lock.user[i].lockStart + lock.user[i].lockDuration
+            ) {
+                indexToWithdraw[id] = i;
+                withdrawableAmount += lock.user[i].amount;
+                id++;
+            }
         }
+
+        return (withdrawableAmount, indexToWithdraw);
+    }
+
+    /// @inheritdoc ITokenLockUp
+    function withdrawAllAvailableTokens() external {
+        (
+            uint256 withdrawableAmount,
+            uint256[] memory indexToWithdraw
+        ) = getAllWithdrawAbleBatchTokens();
+
+        // modifying the state value
+        locks[msg.sender].totalAmountLocked -= withdrawableAmount;
+
+        // Get the lock details by reading via memory
+        LockDetails memory lock = locks[msg.sender];
+
+        if (lock.totalAmountLocked == 0) {
+            delete locks[msg.sender];
+        } else {
+            for (uint256 i; i < indexToWithdraw.length; i++) {
+                locks[msg.sender].user[indexToWithdraw[i]].amount = 0;
+            }
+        }
+
+        // Transfer the tokens to the user
+        SafeERC20.safeTransfer(token, msg.sender, withdrawableAmount);
+
+        // Emit an event to indicate the withdrawal
+        emit Withdrawal(msg.sender, block.timestamp, withdrawableAmount);
     }
 
     /// @inheritdoc ITokenLockUp
@@ -138,10 +185,6 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
     /// @inheritdoc ITokenLockUp
     function unpause() external onlyOwner {
-        // If the deposit deadline has passed, revert the transaction.
-        if (block.timestamp >= depositDeadline)
-            revert TokenLockUp_DepositDeadlineNotSet();
-
         _unpause();
     }
 
@@ -156,18 +199,8 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-    function setDepositDeadline(uint256 _depositDeadline) external onlyOwner {
-        // Check if the previous deadline has ended
-        if (depositDeadline > block.timestamp)
-            revert TokenLockUp_PreviousDeadlineNotEnded();
-
-        // Set the new deposit deadline
-        depositDeadline = _depositDeadline;
-    }
-
-    /// @inheritdoc ITokenLockUp
     function getUserLockedBatchTokenCount() public view returns (uint256) {
-        return locks[msg.sender].length;
+        return locks[msg.sender].user.length;
     }
 
     /// @notice Allows the owner to set the deposit deadline.
