@@ -90,7 +90,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         LockDetails memory lock = locks[msg.sender];
 
         if (lock.user[_index].amount == 0)
-            revert TokenLockUp_AmountCannotBeZero();
+            revert TokenLockUp_AmountShouldBeGreaterThanZero();
 
         // Check if tokens are still locked
         if (
