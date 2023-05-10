@@ -40,7 +40,11 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         _;
     }
 
-    function getUserDetails() external view returns(TokenLockUp.UserDetails[] memory) {
+    function getUserDetails()
+        external
+        view
+        returns (TokenLockUp.UserDetails[] memory)
+    {
         return locks[msg.sender].user;
     }
 
@@ -85,7 +89,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-        function withdrawTokens(uint256 _index) public nonReentrant {
+    function withdrawTokens(uint256 _index) public nonReentrant {
         // If the index is invalid, revert the transaction.
         if (_index >= locks[msg.sender].user.length)
             revert TokenLockUp_Invalid_Index();
@@ -108,7 +112,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         locks[msg.sender].user[_index].amount = 0;
         locks[msg.sender].totalAmountLocked -= withdrawAmount;
 
-        if (locks[msg.sender].totalAmountLocked == 0) delete locks[msg.sender]; 
+        if (locks[msg.sender].totalAmountLocked == 0) delete locks[msg.sender];
 
         // Transfer the tokens to the user
         SafeERC20.safeTransfer(token, msg.sender, withdrawAmount);
@@ -129,13 +133,19 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     function getAllWithdrawableBatchTokens()
         public
         view
-        returns (uint256 withdrawableAmount, uint256[] memory indexToWithdrawWithoutExtraArraySpace)
+        returns (
+            uint256 withdrawableAmount,
+            uint256[] memory indexToWithdrawWithoutExtraArraySpace
+        )
     {
         uint256 id;
         LockDetails memory lock = locks[msg.sender];
 
         uint256 count = getUserLockedBatchTokenCount();
-        uint256[] memory indexToWithdrawWithPossibleExtraArraySpace = new uint256[](count);
+        uint256[]
+            memory indexToWithdrawWithPossibleExtraArraySpace = new uint256[](
+                count
+            );
 
         for (uint256 i; i < count; i++) {
             // Check if amount is above zero and if lock up duration has passed.
@@ -151,13 +161,14 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
             }
         }
 
-        indexToWithdrawWithoutExtraArraySpace = new uint256[](id); 
+        indexToWithdrawWithoutExtraArraySpace = new uint256[](id);
 
         // resize array from indexToWithdrawWithPossibleExtraArraySpace to indexToWithdrawWithoutExtraArraySpace
         for (uint256 i; i < id; i++) {
-           indexToWithdrawWithoutExtraArraySpace[i] = indexToWithdrawWithPossibleExtraArraySpace[i];
+            indexToWithdrawWithoutExtraArraySpace[
+                i
+            ] = indexToWithdrawWithPossibleExtraArraySpace[i];
         }
-
 
         return (withdrawableAmount, indexToWithdrawWithoutExtraArraySpace);
     }
