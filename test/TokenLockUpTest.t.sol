@@ -28,8 +28,6 @@ contract TokenLockUpTest is Test {
     }
 
     function testDeposit() public {
-        nftContract.setStakingContract(address(tokenLockUp));
-
         // Deposit 1000 tokens with a lockup period of 1000 seconds
         tokenLockUp.deposit(1000, lockDuration);
 
@@ -49,8 +47,6 @@ contract TokenLockUpTest is Test {
     }
 
     function testWithdrawTokens() public {
-        nftContract.setStakingContract(address(tokenLockUp));
-
         uint userBalanceBeforeDepositTx = token.balanceOf(address(this));
 
         // Deposit 1000 tokens with a lockup period of 1000 seconds
@@ -79,8 +75,6 @@ contract TokenLockUpTest is Test {
     }
 
     function WithdrawAllLockedTokens() public {
-        nftContract.setStakingContract(address(tokenLockUp));
-
         // Deposit 100 tokens with a lockup period of 1000 seconds
         tokenLockUp.deposit(100, lockDuration);
 
@@ -109,8 +103,6 @@ contract TokenLockUpTest is Test {
     }
 
     function testWithdrawAllAvailableTokens() public {
-        nftContract.setStakingContract(address(tokenLockUp));
-
         // Deposit 1000 tokens with a lockup period of 2 days 6 times
         for (uint256 i; i < 7; i++) {
             tokenLockUp.deposit(1000, lockDuration);
@@ -159,9 +151,6 @@ contract TokenLockUpTest is Test {
 
     function testFailToWithdrawBeforeTokensAreUnlock() public {
         uint256 amount = 1000;
-
-        nftContract.setStakingContract(address(tokenLockUp));
-
         tokenLockUp.deposit(amount, lockDuration);
         tokenLockUp.withdrawTokens(0);
     }
@@ -173,7 +162,6 @@ contract TokenLockUpTest is Test {
 
     function testUnpause() public {
         tokenLockUp.pause();
-
         tokenLockUp.unpause();
         assert(!tokenLockUp.paused());
     }
@@ -190,8 +178,6 @@ contract TokenLockUpTest is Test {
 
     // Test case for withdrawing with invalid index
     function testFailWhenWithdrawingWithInvalidIndex() public {
-        nftContract.setStakingContract(address(tokenLockUp));
-
         tokenLockUp.deposit(1000, lockDuration);
 
         // Advance the block timestamp to the end of the lockup period
