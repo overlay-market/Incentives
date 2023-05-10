@@ -40,14 +40,6 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         _;
     }
 
-    function getUserDetails()
-        external
-        view
-        returns (TokenLockUp.UserDetails[] memory)
-    {
-        return locks[msg.sender].user;
-    }
-
     /// @inheritdoc ITokenLockUp
     function deposit(
         uint256 _amount,
@@ -201,6 +193,15 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
         // Emit an event to indicate the withdrawal
         emit Withdrawal(msg.sender, block.timestamp, withdrawableAmount);
+    }
+
+    /// @inheritdoc ITokenLockUp
+    function getUserDetails()
+        external
+        view
+        returns (ITokenLockUp.UserDetails[] memory)
+    {
+        return locks[msg.sender].user;
     }
 
     /// @inheritdoc ITokenLockUp

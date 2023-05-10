@@ -83,4 +83,11 @@ interface ITokenLockUp {
         external
         view
         returns (uint256 withdrawableAmount, uint256[] memory indexToWithdraw);
+
+    /// @notice Gets user lock up details.
+    /// @return UserDetails The struct of user details.
+    function getUserDetails()
+        external
+        view
+        returns (ITokenLockUp.UserDetails[] memory);
 }
