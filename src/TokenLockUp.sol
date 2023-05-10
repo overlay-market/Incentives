@@ -22,12 +22,13 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     IERC20 public token;
     IOverlayNFTs public OverlayNFT;
 
-    // Define a struct called LockDetails that contains details of a user's locked tokens.
+  // Contains details of a user's locked tokens and total locked amount.
     struct LockDetails {
         uint256 totalAmountLocked;
         UserDetails[] user;
     }
 
+    // Contains details of a user's locked tokens.
     struct UserDetails {
         uint256 amount;
         uint256 lockDuration;
@@ -40,7 +41,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define a mapping to store points earned for each user.
     mapping(address => uint256) public earnedPoints;
 
-    // Define the constructor of the contract, which initializes the ERC20 token and NFT contract addresses.
+    // Initializes the ERC20 token.
     constructor(address _tokenAddress) {
         token = IERC20(_tokenAddress);
     }
@@ -66,6 +67,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Transfer the tokens from the user to the contract.
         SafeERC20.safeTransferFrom(token, msg.sender, address(this), _amount);
 
+        // Get the lock details by reading via storage
         LockDetails storage lock = locks[msg.sender];
 
         lock.totalAmountLocked += _amount;
@@ -78,11 +80,12 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
             })
         );
 
-        // Calculate the number of NFTs to send to the user based on the locked
-        // token amount and duration, and mint them.
+        // Calculate the number of points to send to the user based on the locked
+        // token amount and duration.
 
         uint256 pointsEarned = calculatePointsToGive(_amount, _lockDuration);
 
+        // assign user points earned
         earnedPoints[msg.sender] += pointsEarned;
 
         // Emit a Deposit event to signify that a deposit has been made.
