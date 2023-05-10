@@ -90,7 +90,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-    function withdrawTokens(uint256 _index) public nonReentrant {
+        function withdrawTokens(uint256 _index) public nonReentrant {
         // If the index is invalid, revert the transaction.
         if (_index >= locks[msg.sender].user.length)
             revert TokenLockUp_Invalid_Index();
@@ -113,7 +113,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         locks[msg.sender].user[_index].amount = 0;
         locks[msg.sender].totalAmountLocked -= withdrawAmount;
 
-        if (lock.totalAmountLocked == 0) delete locks[msg.sender];
+        if (locks[msg.sender].totalAmountLocked == 0) delete locks[msg.sender]; 
 
         // Transfer the tokens to the user
         SafeERC20.safeTransfer(token, msg.sender, withdrawAmount);
@@ -121,7 +121,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Emit an event to indicate the withdrawal
         emit Withdrawal(msg.sender, block.timestamp, withdrawAmount);
     }
-
+    
     /// @inheritdoc ITokenLockUp
     function updateUserPoints(
         address _userAddress,
