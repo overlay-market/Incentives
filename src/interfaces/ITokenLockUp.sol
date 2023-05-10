@@ -20,6 +20,19 @@ interface ITokenLockUp {
     /// @notice Emits an event whenever the withdraw function is called.
     event Withdrawal(address indexed _addr, uint256 timestamp, uint256 amount);
 
+    // Contains details of a user's locked tokens and total locked amount.
+    struct LockDetails {
+        uint256 totalAmountLocked;
+        UserDetails[] user;
+    }
+
+    // Contains details of a user's locked tokens.
+    struct UserDetails {
+        uint256 amount;
+        uint256 lockDuration;
+        uint256 lockStart;
+    }
+
     /// @notice Pauses the contract.
     function pause() external;
 
@@ -66,7 +79,7 @@ interface ITokenLockUp {
     /// @notice Used to return the withdrawable amount and their index a user has.
     /// @return withdrawableAmount total amount to withdraw.
     /// @return indexToWithdraw index of withdrawable amount.
-    function getAllWithdrawAbleBatchTokens()
+    function getAllWithdrawableBatchTokens()
         external
         view
         returns (uint256 withdrawableAmount, uint256[] memory indexToWithdraw);

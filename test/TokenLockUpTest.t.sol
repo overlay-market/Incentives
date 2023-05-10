@@ -3,9 +3,11 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
+import "forge-std/console.sol";
 import "../src/TestToken.sol";
 import "../src/BelieversNFT.sol";
 import "../src/TokenLockUp.sol";
+import "../src/interfaces/ITokenLockUp.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract TokenLockUpTest is Test {
@@ -22,15 +24,22 @@ contract TokenLockUpTest is Test {
         tokenLockUp = new TokenLockUp(address(token));
 
         // Approve the token to be used for deposit
-        token.approve(address(tokenLockUp), 1000);
+        token.approve(address(tokenLockUp), 1000000000000000000000);
     }
 
     function testDeposit() public {
-        tokenLockUp.setDepositDeadline(3 days);
         nftContract.setStakingContract(address(tokenLockUp));
 
         // Deposit 1000 tokens with a lockup period of 1000 seconds
-        tokenLockUp.deposit(1000, 2 days);
+        tokenLockUp.deposit(1000, lockDuration);
+
+        TokenLockUp.UserDetails[] memory user = tokenLockUp.getUserDetails();
+
+        // Assert that the user token amount is correct
+        assertEq(user[0].amount, 1000);
+
+        // Assert that the user token amount is correct
+        assertEq(user[0].lockDuration, (block.timestamp - 1) + lockDuration);
 
         // Assert that the user has received the right points
         assertEq(tokenLockUp.earnedPoints(address(this)), 1000 * 2);
@@ -40,7 +49,6 @@ contract TokenLockUpTest is Test {
     }
 
     function testWithdrawTokens() public {
-        tokenLockUp.setDepositDeadline(3 days);
         nftContract.setStakingContract(address(tokenLockUp));
 
         uint userBalanceBeforeDepositTx = token.balanceOf(address(this));
@@ -70,27 +78,26 @@ contract TokenLockUpTest is Test {
         assertEq(userBalanceAfterDepositTx + 1000, userBalanceAfterWithdrawTx);
     }
 
-    function testWithdrawAllLockedTokens() public {
-        tokenLockUp.setDepositDeadline(3 days);
+    function WithdrawAllLockedTokens() public {
         nftContract.setStakingContract(address(tokenLockUp));
 
         // Deposit 100 tokens with a lockup period of 1000 seconds
         tokenLockUp.deposit(100, lockDuration);
 
         // Advance the block timestamp to the end of the lockup period
-        vm.warp(block.timestamp + lockDuration);
+        vm.warp(block.timestamp + 3 days);
 
         tokenLockUp.deposit(100, lockDuration);
         uint userBalanceAfterBothDepositTx = token.balanceOf(address(this));
 
         // Advance the block timestamp to the end of the lockup period
-        vm.warp(block.timestamp + lockDuration);
+        vm.warp(block.timestamp + 3 days);
 
         // Assert that the user has 2 locked batches of tokens
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 2);
 
         // Withdraw the tokens
-        tokenLockUp.withdrawAllLockedTokens();
+        tokenLockUp.withdrawAllAvailableTokens();
 
         uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
 
@@ -101,10 +108,58 @@ contract TokenLockUpTest is Test {
         assertEq(userBalanceAfterBothDepositTx + 200, userBalanceAfterWithdrawTx);
     }
 
+    function testWithdrawAllAvailableTokens() public {
+        nftContract.setStakingContract(address(tokenLockUp));
+
+        // Deposit 1000 tokens with a lockup period of 2 days 6 times
+        for (uint256 i; i < 7; i++) {
+            tokenLockUp.deposit(1000, lockDuration);
+        }
+
+        // Deposit 1000 tokens with a lockup period of 12 days
+        tokenLockUp.deposit(1000, lockDuration * 6);
+
+        TokenLockUp.UserDetails[] memory user = tokenLockUp.getUserDetails();
+
+        for (uint256 i; i < 7; i++) {
+            // Assert that the user token data for each batch is correct
+            assertEq(user[i].amount, 1000);
+            assertEq(user[i].lockDuration, (block.timestamp - 1) + lockDuration);
+        }
+
+        uint userBalanceAfterBothDepositTx = token.balanceOf(address(this));
+
+        // Advance the block timestamp to the end of the lockup period
+        vm.warp(block.timestamp + 3 days);
+
+        // Assert that the user has 2 locked batches of tokens
+        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 8);
+
+        // Withdraw the tokens
+        tokenLockUp.withdrawAllAvailableTokens();
+
+        TokenLockUp.UserDetails[] memory user1 = tokenLockUp.getUserDetails();
+
+        for (uint256 i; i < 6; i++) {
+            // Assert that the user token amount for batch withdrawn is zero
+            assertEq(user1[i].amount, 0);
+        }
+
+        // Assert that the user token amount for batch not yet withdrawn is 1000
+        assertEq(user1[7].amount, 1000);
+
+        uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
+
+        // Assert that the user still has 8 locked batches of tokens given he has unlocked tokens
+        assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 8);
+
+        // Assert that the user has received 7000 tokens extra
+        assertEq(userBalanceAfterBothDepositTx + 7000, userBalanceAfterWithdrawTx);
+    }
+
     function testFailToWithdrawBeforeTokensAreUnlock() public {
         uint256 amount = 1000;
 
-        tokenLockUp.setDepositDeadline(3 days);
         nftContract.setStakingContract(address(tokenLockUp));
 
         tokenLockUp.deposit(amount, lockDuration);
@@ -118,36 +173,23 @@ contract TokenLockUpTest is Test {
 
     function testUnpause() public {
         tokenLockUp.pause();
-        tokenLockUp.setDepositDeadline(block.timestamp + 100);
 
         tokenLockUp.unpause();
         assert(!tokenLockUp.paused());
     }
 
-    function testFailToUnpauseAfterDeadlinePassed() public {
-        tokenLockUp.pause();
-        tokenLockUp.unpause();
-    }
-
-    function testFailWhenDepositingAfterDeadline() public {
-        tokenLockUp.deposit(1000, 100);
-    }
-
     // Test case for depositing with invalid lock duration
     function testFailWhenDepositingWithInvalidLockDuration() public {
-        tokenLockUp.setDepositDeadline(block.timestamp);
         tokenLockUp.deposit(1000, 0);
     }
 
     // Test case for depositing with 0 amount
     function testFailToDepositWithZeroAmount() public {
-        tokenLockUp.setDepositDeadline(block.timestamp);
         tokenLockUp.deposit(0, lockDuration);
     }
 
     // Test case for withdrawing with invalid index
     function testFailWhenWithdrawingWithInvalidIndex() public {
-        tokenLockUp.setDepositDeadline(block.timestamp);
         nftContract.setStakingContract(address(tokenLockUp));
 
         tokenLockUp.deposit(1000, lockDuration);
@@ -163,7 +205,6 @@ contract TokenLockUpTest is Test {
         vm.prank(address(1));
         tokenLockUp.setTokenAddress(address(2));
 
-        tokenLockUp.setDepositDeadline(block.timestamp);
         tokenLockUp.setNftContractnAddress(address(2));
     }
 }

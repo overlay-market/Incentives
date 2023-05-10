@@ -9,6 +9,7 @@
 
 pragma solidity ^0.8.13;
 
+import "forge-std/console.sol";
 import "src/interfaces/ITokenLockUp.sol";
 import "src/interfaces/IOverlayNFTs.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";
@@ -21,19 +22,6 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     // Define public variables for the ERC20 token and the NFT contract.
     IERC20 public token;
     IOverlayNFTs public OverlayNFT;
-
-  // Contains details of a user's locked tokens and total locked amount.
-    struct LockDetails {
-        uint256 totalAmountLocked;
-        UserDetails[] user;
-    }
-
-    // Contains details of a user's locked tokens.
-    struct UserDetails {
-        uint256 amount;
-        uint256 lockDuration;
-        uint256 lockStart;
-    }
 
     // Define a mapping to store the lock details for each user.
     mapping(address => LockDetails) public locks;
@@ -50,6 +38,10 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         if (msg.sender != address(OverlayNFT))
             revert TokenLockUp_NotOverlayNftContract();
         _;
+    }
+
+    function getUserDetails() external view returns(TokenLockUp.UserDetails[] memory) {
+        return locks[msg.sender].user;
     }
 
     /// @inheritdoc ITokenLockUp
@@ -159,11 +151,13 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
             }
         }
 
+        indexToWithdrawWithoutExtraArraySpace = new uint256[](id); 
+
         // resize array from indexToWithdrawWithPossibleExtraArraySpace to indexToWithdrawWithoutExtraArraySpace
         for (uint256 i; i < id; i++) {
-           indexToWithdrawWithoutExtraArraySpace = new uint256[](id); 
            indexToWithdrawWithoutExtraArraySpace[i] = indexToWithdrawWithPossibleExtraArraySpace[i];
         }
+
 
         return (withdrawableAmount, indexToWithdrawWithoutExtraArraySpace);
     }
