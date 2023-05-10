@@ -121,7 +121,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Emit an event to indicate the withdrawal
         emit Withdrawal(msg.sender, block.timestamp, withdrawAmount);
     }
-    
+
     /// @inheritdoc ITokenLockUp
     function updateUserPoints(
         address _userAddress,
@@ -131,30 +131,38 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     }
 
     /// @inheritdoc ITokenLockUp
-    function getAllWithdrawAbleBatchTokens()
+    function getAllWithdrawableBatchTokens()
         public
         view
-        returns (uint256 withdrawableAmount, uint256[] memory indexToWithdraw)
+        returns (uint256 withdrawableAmount, uint256[] memory indexToWithdrawWithoutExtraArraySpace)
     {
         uint256 id;
         LockDetails memory lock = locks[msg.sender];
+
         uint256 count = getUserLockedBatchTokenCount();
+        uint256[] memory indexToWithdrawWithPossibleExtraArraySpace = new uint256[](count);
 
         for (uint256 i; i < count; i++) {
             // Check if amount is above zero and if lock up duration has passed.
             if (
                 lock.user[i].amount > 0 &&
-                block.timestamp <
+                block.timestamp >
                 lock.user[i].lockStart + lock.user[i].lockDuration
             ) {
-                // Record the index of amount store.
-                indexToWithdraw[id] = i;
+                // Record the index of amount added.
+                indexToWithdrawWithPossibleExtraArraySpace[id] = i;
                 withdrawableAmount += lock.user[i].amount;
                 id++;
             }
         }
 
-        return (withdrawableAmount, indexToWithdraw);
+        // resize array from indexToWithdrawWithPossibleExtraArraySpace to indexToWithdrawWithoutExtraArraySpace
+        for (uint256 i; i < id; i++) {
+           indexToWithdrawWithoutExtraArraySpace = new uint256[](id); 
+           indexToWithdrawWithoutExtraArraySpace[i] = indexToWithdrawWithPossibleExtraArraySpace[i];
+        }
+
+        return (withdrawableAmount, indexToWithdrawWithoutExtraArraySpace);
     }
 
     /// @inheritdoc ITokenLockUp
@@ -162,7 +170,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         (
             uint256 withdrawableAmount,
             uint256[] memory indexToWithdraw
-        ) = getAllWithdrawAbleBatchTokens();
+        ) = getAllWithdrawableBatchTokens();
 
         // modifying the state value
         locks[msg.sender].totalAmountLocked -= withdrawableAmount;
@@ -170,7 +178,7 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         // Get the lock details by reading via memory
         LockDetails memory lock = locks[msg.sender];
 
-        // checks if total amount locked by user is
+        // checks if total amount locked by user is zero
         if (lock.totalAmountLocked == 0) {
             delete locks[msg.sender];
         } else {
