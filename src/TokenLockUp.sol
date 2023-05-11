@@ -9,7 +9,6 @@
 
 pragma solidity ^0.8.13;
 
-import "forge-std/console.sol";
 import "src/interfaces/ITokenLockUp.sol";
 import "src/interfaces/IOverlayNFTs.sol";
 import "openzeppelin-contracts/contracts/access/Ownable.sol";

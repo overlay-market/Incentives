@@ -13,7 +13,11 @@ error TokenLockUp_LockDurationShouldBeGreaterThanZero();
 
 interface ITokenLockUp {
     /// @notice Emits an event whenever the deposit function is called.
-    event Deposit(address indexed _addr, uint256 _dueDateInSeconds, uint256 amount);
+    event Deposit(
+        address indexed _addr,
+        uint256 _dueDateInSeconds,
+        uint256 amount
+    );
 
     /// @notice Emits an event whenever the withdraw function is called.
     event Withdrawal(address indexed _addr, uint256 timestamp, uint256 amount);
