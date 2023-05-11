@@ -199,9 +199,9 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     function getUserDetails()
         external
         view
-        returns (ITokenLockUp.UserDetails[] memory)
+        returns (ITokenLockUp.LockDetails memory)
     {
-        return locks[msg.sender].user;
+        return locks[msg.sender];
     }
 
     /// @inheritdoc ITokenLockUp
