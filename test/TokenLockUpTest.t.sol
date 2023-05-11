@@ -59,11 +59,6 @@ contract TokenLockUpTest is Test {
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 1);
     }
 
-    function testFailToDepositWhenContractIsPaused() external {
-        tokenLockUp.pause();
-        tokenLockUp.deposit(amount, lockDuration);
-    }
-
     function testWithdrawTokens() public {
         uint userBalanceBeforeDepositTx = token.balanceOf(address(this));
 
@@ -97,6 +92,44 @@ contract TokenLockUpTest is Test {
         assertEq(userBalanceAfterDepositTx + amount, userBalanceAfterWithdrawTx);
     }
 
+    function testWithdrawOnlyOneBatchTokens() public {
+        // 1st user deposit
+        tokenLockUp.deposit(amount, lockDuration);
+
+        // 2nd user deposit
+        tokenLockUp.deposit(amount, lockDuration);
+
+        // User details before withdraw()
+        TokenLockUp.LockDetails memory lock = tokenLockUp.getUserDetails();
+
+        // Assert that the user 1st token amount is correct
+        assertEq(lock.user[0].amount, amount);
+
+        // Assert that the user 2nd token amount is correct
+        assertEq(lock.user[1].amount, amount);
+
+        // Assert that the user total token amount locked is correct
+        assertEq(lock.totalAmountLocked, amount * 2);
+
+        // Advance the block timestamp to the end of the lockup period
+        vm.warp(block.timestamp + 3 days);
+
+        // Withdraw the tokens
+        tokenLockUp.withdrawTokens(0);
+
+        // User details after withdraw()
+        TokenLockUp.LockDetails memory lock0 = tokenLockUp.getUserDetails();
+
+        // Assert that the user 1st token amount is 0
+        assertEq(lock0.user[0].amount, 0);
+
+        // Assert that the user 2nd token amount is still 1000
+        assertEq(lock0.user[1].amount, amount);
+
+        // Assert that the user total token amount is 1000 short
+        assertEq(lock0.totalAmountLocked, amount);
+    }
+
     function WithdrawAllLockedTokens() public {
         // Deposit 1000 tokens with a lockup period of 1000 seconds
         tokenLockUp.deposit(amount, lockDuration);
@@ -105,6 +138,7 @@ contract TokenLockUpTest is Test {
         vm.warp(block.timestamp + 3 days);
 
         tokenLockUp.deposit(amount, lockDuration);
+
         uint userBalanceAfterBothDepositTx = token.balanceOf(address(this));
 
         // Advance the block timestamp to the end of the lockup period
@@ -121,12 +155,12 @@ contract TokenLockUpTest is Test {
         // Assert that the user has no locked batches of tokens
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 0);
 
-        // Assert that the user has received 200 tokens extra
+        // Assert that the user has received 2000 tokens extra
         assertEq(userBalanceAfterBothDepositTx + 2000, userBalanceAfterWithdrawTx);
     }
 
     function testWithdrawAllAvailableTokens() public {
-        // Deposit 1000 tokens with a lockup period of 2 days 6 times
+        // Deposit 1000 tokens with a lockup period of 2 days 7 times
         for (uint256 i; i < 7; i++) {
             tokenLockUp.deposit(1000, lockDuration);
         }
@@ -139,10 +173,11 @@ contract TokenLockUpTest is Test {
         // Assert that contract balance is 8000
         assertEq(contractBalanceAfterDepositTx, 8000);
 
+        // User details in contract
         TokenLockUp.LockDetails memory lock = tokenLockUp.getUserDetails();
 
+        // Assert that the user token data for each batch is correct
         for (uint256 i; i < 7; i++) {
-            // Assert that the user token data for each batch is correct
             assertEq(lock.user[i].amount, amount);
             assertEq(lock.user[i].lockDuration, (block.timestamp - 1) + lockDuration);
         }
@@ -171,6 +206,9 @@ contract TokenLockUpTest is Test {
         // Assert that the user token amount for batch not yet withdrawn is 1000
         assertEq(lock0.user[7].amount, amount);
 
+        // Assert that the user total token amount locked is correct
+        assertEq(lock0.totalAmountLocked, 1000);
+
         uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
 
         // Assert that the user still has 8 locked batches of tokens given he has unlocked tokens
@@ -178,11 +216,6 @@ contract TokenLockUpTest is Test {
 
         // Assert that the user has received 7000 tokens extra
         assertEq(userBalanceAfterBothDepositTx + 7000, userBalanceAfterWithdrawTx);
-    }
-
-    function testFailToWithdrawBeforeTokensAreUnlock() public {
-        tokenLockUp.deposit(amount, lockDuration);
-        tokenLockUp.withdrawTokens(0);
     }
 
     function testPause() public {
@@ -196,6 +229,11 @@ contract TokenLockUpTest is Test {
         assert(!tokenLockUp.paused());
     }
 
+    function testFailToDepositWhenContractIsPaused() external {
+        tokenLockUp.pause();
+        tokenLockUp.deposit(amount, lockDuration);
+    }
+
     // Test case for depositing with invalid lock duration
     function testFailWhenDepositingWithInvalidLockDuration() public {
         tokenLockUp.deposit(1000, 0);
@@ -206,12 +244,28 @@ contract TokenLockUpTest is Test {
         tokenLockUp.deposit(0, lockDuration);
     }
 
-    // Test case for withdrawing with invalid index
-    function testFailWhenWithdrawingWithInvalidIndex() public {
+    function testFailToWithdrawBeforeTokensAreUnlock() public {
+        tokenLockUp.deposit(amount, lockDuration);
+        tokenLockUp.withdrawTokens(0);
+    }
+
+    function testFailToWithdrawWhenTokensAmountIsZero() public {
+        tokenLockUp.deposit(amount, lockDuration);
         tokenLockUp.deposit(amount, lockDuration);
 
         // Advance the block timestamp to the end of the lockup period
-        vm.warp(block.timestamp + lockDuration);
+        vm.warp(block.timestamp + 3 days);
+
+        // Withdraw the first batch tokens
+        tokenLockUp.withdrawTokens(0);
+
+        // Tries to withdraw the already withdrawn first batch tokens
+        tokenLockUp.withdrawTokens(0);
+    }
+
+    // Test case for withdrawing with invalid index
+    function testFailWhenWithdrawingWithInvalidIndex() public {
+        tokenLockUp.deposit(amount, lockDuration);
 
         // Attempt to withdraw with invalid index
         tokenLockUp.withdrawTokens(1);
