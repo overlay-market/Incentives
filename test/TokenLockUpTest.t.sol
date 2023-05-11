@@ -11,8 +11,11 @@ import "openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 
 contract TokenLockUpTest is Test {
     // Declare the necessary variables
+
     IERC20 token;
     TokenLockUp tokenLockUp;
+
+    uint256 amount = 1000;
     uint256 lockDuration = 2 days;
 
     function setUp() public {
@@ -31,33 +34,38 @@ contract TokenLockUpTest is Test {
         assertEq(contractBalanceBeforeDepositTx, 0);
 
         // Deposit 1000 tokens with a lockup period of 1000 seconds
-        tokenLockUp.deposit(1000, lockDuration);
+        tokenLockUp.deposit(amount, lockDuration);
 
         uint256 contractBalanceAfterDepositTx = token.balanceOf(address(tokenLockUp));
 
         // Assert that contract balance is 1000
-        assertEq(contractBalanceAfterDepositTx, 1000);
+        assertEq(contractBalanceAfterDepositTx, amount);
 
         TokenLockUp.UserDetails[] memory user = tokenLockUp.getUserDetails();
 
         // Assert that the user token amount is correct
-        assertEq(user[0].amount, 1000);
+        assertEq(user[0].amount, amount);
 
         // Assert that the user token amount is correct
         assertEq(user[0].lockDuration, (block.timestamp - 1) + lockDuration);
 
         // Assert that the user has received the right points
-        assertEq(tokenLockUp.earnedPoints(address(this)), 1000 * 2);
+        assertEq(tokenLockUp.earnedPoints(address(this)), amount * 2);
 
         // Assert that the user has 1 locked batch of tokens
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 1);
+    }
+
+    function testFailToDepositWhenContractIsPaused() external {
+        tokenLockUp.pause();
+        tokenLockUp.deposit(amount, lockDuration);
     }
 
     function testWithdrawTokens() public {
         uint userBalanceBeforeDepositTx = token.balanceOf(address(this));
 
         // Deposit 1000 tokens with a lockup period of 1000 seconds
-        tokenLockUp.deposit(1000, lockDuration);
+        tokenLockUp.deposit(amount, lockDuration);
 
         uint userBalanceAfterDepositTx = token.balanceOf(address(this));
 
@@ -80,20 +88,20 @@ contract TokenLockUpTest is Test {
         // Assert that the user has no locked batches of tokens
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 0);
 
-        assertEq(userBalanceBeforeDepositTx - 1000, userBalanceAfterDepositTx);
+        assertEq(userBalanceBeforeDepositTx - amount, userBalanceAfterDepositTx);
 
         // Assert that the user has received 1000 tokens
-        assertEq(userBalanceAfterDepositTx + 1000, userBalanceAfterWithdrawTx);
+        assertEq(userBalanceAfterDepositTx + amount, userBalanceAfterWithdrawTx);
     }
 
     function WithdrawAllLockedTokens() public {
-        // Deposit 100 tokens with a lockup period of 1000 seconds
-        tokenLockUp.deposit(100, lockDuration);
+        // Deposit 1000 tokens with a lockup period of 1000 seconds
+        tokenLockUp.deposit(amount, lockDuration);
 
         // Advance the block timestamp to the end of the lockup period
         vm.warp(block.timestamp + 3 days);
 
-        tokenLockUp.deposit(100, lockDuration);
+        tokenLockUp.deposit(amount, lockDuration);
         uint userBalanceAfterBothDepositTx = token.balanceOf(address(this));
 
         // Advance the block timestamp to the end of the lockup period
@@ -111,7 +119,7 @@ contract TokenLockUpTest is Test {
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 0);
 
         // Assert that the user has received 200 tokens extra
-        assertEq(userBalanceAfterBothDepositTx + 200, userBalanceAfterWithdrawTx);
+        assertEq(userBalanceAfterBothDepositTx + 2000, userBalanceAfterWithdrawTx);
     }
 
     function testWithdrawAllAvailableTokens() public {
@@ -132,7 +140,7 @@ contract TokenLockUpTest is Test {
 
         for (uint256 i; i < 7; i++) {
             // Assert that the user token data for each batch is correct
-            assertEq(user[i].amount, 1000);
+            assertEq(user[i].amount, amount);
             assertEq(user[i].lockDuration, (block.timestamp - 1) + lockDuration);
         }
 
@@ -155,7 +163,7 @@ contract TokenLockUpTest is Test {
         }
 
         // Assert that the user token amount for batch not yet withdrawn is 1000
-        assertEq(user1[7].amount, 1000);
+        assertEq(user1[7].amount, amount);
 
         uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
 
@@ -167,7 +175,6 @@ contract TokenLockUpTest is Test {
     }
 
     function testFailToWithdrawBeforeTokensAreUnlock() public {
-        uint256 amount = 1000;
         tokenLockUp.deposit(amount, lockDuration);
         tokenLockUp.withdrawTokens(0);
     }
@@ -195,7 +202,7 @@ contract TokenLockUpTest is Test {
 
     // Test case for withdrawing with invalid index
     function testFailWhenWithdrawingWithInvalidIndex() public {
-        tokenLockUp.deposit(1000, lockDuration);
+        tokenLockUp.deposit(amount, lockDuration);
 
         // Advance the block timestamp to the end of the lockup period
         vm.warp(block.timestamp + lockDuration);
