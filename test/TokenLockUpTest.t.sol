@@ -20,7 +20,6 @@ contract TokenLockUpTest is Test {
     function setUp() public {
         // Deploy the TokenLockUp contract
         token =  new TestToken();
-        nftContract = new BelieversNFT('_name', '_symbol', '_baseURI');
         tokenLockUp = new TokenLockUp(address(token));
 
         // Approve the token to be used for deposit
@@ -28,8 +27,18 @@ contract TokenLockUpTest is Test {
     }
 
     function testDeposit() public {
+        uint256 contractBalanceBeforeDepositTx = token.balanceOf(address(tokenLockUp));
+
+        // Assert that contract balance is zero
+        assertEq(contractBalanceBeforeDepositTx, 0);
+
         // Deposit 1000 tokens with a lockup period of 1000 seconds
         tokenLockUp.deposit(1000, lockDuration);
+
+        uint256 contractBalanceAfterDepositTx = token.balanceOf(address(tokenLockUp));
+
+        // Assert that contract balance is 1000
+        assertEq(contractBalanceAfterDepositTx, 1000);
 
         TokenLockUp.UserDetails[] memory user = tokenLockUp.getUserDetails();
 
@@ -63,7 +72,12 @@ contract TokenLockUpTest is Test {
         // Withdraw the tokens
         tokenLockUp.withdrawTokens(0);
 
-        uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
+        uint256 contractBalanceAfterWithdrawTx = token.balanceOf(address(tokenLockUp));
+
+        // Assert that contract balance is 0
+        assertEq(contractBalanceAfterWithdrawTx, 0);
+
+        uint256 userBalanceAfterWithdrawTx = token.balanceOf(address(this));
 
         // Assert that the user has no locked batches of tokens
         assertEq(tokenLockUp.getUserLockedBatchTokenCount(), 0);
@@ -110,6 +124,11 @@ contract TokenLockUpTest is Test {
 
         // Deposit 1000 tokens with a lockup period of 12 days
         tokenLockUp.deposit(1000, lockDuration * 6);
+
+        uint256 contractBalanceAfterDepositTx = token.balanceOf(address(tokenLockUp));
+
+        // Assert that contract balance is 8000
+        assertEq(contractBalanceAfterDepositTx, 8000);
 
         TokenLockUp.UserDetails[] memory user = tokenLockUp.getUserDetails();
 
@@ -190,7 +209,6 @@ contract TokenLockUpTest is Test {
      function testFailWhenNonOwnerCallsRestrictedFunctions() public {
         vm.prank(address(1));
         tokenLockUp.setTokenAddress(address(2));
-
         tokenLockUp.setNftContractnAddress(address(2));
     }
 }
