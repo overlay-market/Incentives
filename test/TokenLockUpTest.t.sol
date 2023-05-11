@@ -41,13 +41,16 @@ contract TokenLockUpTest is Test {
         // Assert that contract balance is 1000
         assertEq(contractBalanceAfterDepositTx, amount);
 
-        TokenLockUp.UserDetails[] memory user = tokenLockUp.getUserDetails();
+        TokenLockUp.LockDetails memory lock = tokenLockUp.getUserDetails();
 
         // Assert that the user token amount is correct
-        assertEq(user[0].amount, amount);
+        assertEq(lock.user[0].amount, amount);
+
+        // Assert that the user total token amount locked is correct
+        assertEq(lock.totalAmountLocked, amount);
 
         // Assert that the user token amount is correct
-        assertEq(user[0].lockDuration, (block.timestamp - 1) + lockDuration);
+        assertEq(lock.user[0].lockDuration, (block.timestamp - 1) + lockDuration);
 
         // Assert that the user has received the right points
         assertEq(tokenLockUp.earnedPoints(address(this)), amount * 2);
@@ -136,13 +139,16 @@ contract TokenLockUpTest is Test {
         // Assert that contract balance is 8000
         assertEq(contractBalanceAfterDepositTx, 8000);
 
-        TokenLockUp.UserDetails[] memory user = tokenLockUp.getUserDetails();
+        TokenLockUp.LockDetails memory lock = tokenLockUp.getUserDetails();
 
         for (uint256 i; i < 7; i++) {
             // Assert that the user token data for each batch is correct
-            assertEq(user[i].amount, amount);
-            assertEq(user[i].lockDuration, (block.timestamp - 1) + lockDuration);
+            assertEq(lock.user[i].amount, amount);
+            assertEq(lock.user[i].lockDuration, (block.timestamp - 1) + lockDuration);
         }
+
+        // Assert that the user total token amount locked is correct
+        assertEq(lock.totalAmountLocked, 8000);
 
         uint userBalanceAfterBothDepositTx = token.balanceOf(address(this));
 
@@ -155,15 +161,15 @@ contract TokenLockUpTest is Test {
         // Withdraw the tokens
         tokenLockUp.withdrawAllAvailableTokens();
 
-        TokenLockUp.UserDetails[] memory user1 = tokenLockUp.getUserDetails();
+        TokenLockUp.LockDetails memory lock0 = tokenLockUp.getUserDetails();
 
         for (uint256 i; i < 6; i++) {
             // Assert that the user token amount for batch withdrawn is zero
-            assertEq(user1[i].amount, 0);
+            assertEq(lock0.user[i].amount, 0);
         }
 
         // Assert that the user token amount for batch not yet withdrawn is 1000
-        assertEq(user1[7].amount, amount);
+        assertEq(lock0.user[7].amount, amount);
 
         uint userBalanceAfterWithdrawTx = token.balanceOf(address(this));
 
