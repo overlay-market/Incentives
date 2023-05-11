@@ -162,11 +162,11 @@ contract TokenLockUpTest is Test {
     function testWithdrawAllAvailableTokens() public {
         // Deposit 1000 tokens with a lockup period of 2 days 7 times
         for (uint256 i; i < 7; i++) {
-            tokenLockUp.deposit(1000, lockDuration);
+            tokenLockUp.deposit(amount, lockDuration);
         }
 
         // Deposit 1000 tokens with a lockup period of 12 days
-        tokenLockUp.deposit(1000, lockDuration * 6);
+        tokenLockUp.deposit(amount, lockDuration * 6);
 
         uint256 contractBalanceAfterDepositTx = token.balanceOf(address(tokenLockUp));
 
@@ -216,6 +216,21 @@ contract TokenLockUpTest is Test {
 
         // Assert that the user has received 7000 tokens extra
         assertEq(userBalanceAfterBothDepositTx + 7000, userBalanceAfterWithdrawTx);
+    }
+
+    function testPointReduction() public {
+        tokenLockUp.deposit(amount, lockDuration);
+
+        // Assert that the user has received the right points
+        assertEq(tokenLockUp.earnedPoints(address(this)), 2000);
+
+        tokenLockUp.setNftContractnAddress(address(this));
+
+        tokenLockUp.updateUserPoints(address(this), 500);
+
+        // Assert that the user has received the right points
+        assertEq(tokenLockUp.earnedPoints(address(this)), 1500);
+
     }
 
     function testPause() public {
@@ -269,6 +284,10 @@ contract TokenLockUpTest is Test {
 
         // Attempt to withdraw with invalid index
         tokenLockUp.withdrawTokens(1);
+    }
+
+    function testFailWhenCallIsNotNftContractAddress() public {
+        tokenLockUp.updateUserPoints(address(this), 500);
     }
 
      function testFailWhenNonOwnerCallsRestrictedFunctions() public {

@@ -69,7 +69,6 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
         // Calculate the number of points to send to the user based on the locked
         // token amount and duration.
-
         uint256 pointsEarned = calculatePointsToGive(_amount, _lockDuration);
 
         // assign user points earned
