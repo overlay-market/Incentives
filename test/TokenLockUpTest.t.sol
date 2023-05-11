@@ -3,9 +3,8 @@
 pragma solidity ^0.8.13;
 
 import "forge-std/Test.sol";
-import "forge-std/console.sol";
 import "../src/TestToken.sol";
-import "../src/BelieversNFT.sol";
+import "forge-std/console.sol";
 import "../src/TokenLockUp.sol";
 import "../src/interfaces/ITokenLockUp.sol";
 import "openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
@@ -13,7 +12,6 @@ import "openzeppelin-contracts/contracts/token/ERC721/IERC721Receiver.sol";
 contract TokenLockUpTest is Test {
     // Declare the necessary variables
     IERC20 token;
-    BelieversNFT nftContract;
     TokenLockUp tokenLockUp;
     uint256 lockDuration = 2 days;
 
