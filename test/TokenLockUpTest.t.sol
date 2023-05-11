@@ -130,7 +130,7 @@ contract TokenLockUpTest is Test {
         assertEq(lock0.totalAmountLocked, amount);
     }
 
-    function WithdrawAllLockedTokens() public {
+    function testWithdrawAllLockedTokens() public {
         // Deposit 1000 tokens with a lockup period of 1000 seconds
         tokenLockUp.deposit(amount, lockDuration);
 
