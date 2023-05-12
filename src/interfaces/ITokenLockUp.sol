@@ -6,12 +6,16 @@ error TokenLockUp_TokensAreStillLocked();
 error TokenLockUp_NotOverlayNftContract();
 error TokenLockUp_DepositDeadlineReached();
 error TokenLockUp_TokensAlreadyWithdrawn();
+error TokenLockUp_AmountAboveEarnedPoints();
 error TokenLockUp_PreviousDeadlineNotEnded();
 error TokenLockUp_DurationBelowExistingDuration();
 error TokenLockUp_AmountShouldBeGreaterThanZero();
 error TokenLockUp_LockDurationShouldBeGreaterThanZero();
 
 interface ITokenLockUp {
+    /// @notice Emits an event whenever the updateUserPoints() is called.
+    event PointReduced(address indexed _userAddress, uint256 _pointsToReduce);
+
     /// @notice Emits an event whenever the deposit function is called.
     event Deposit(
         address indexed _addr,

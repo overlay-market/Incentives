@@ -81,8 +81,8 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
     /// @inheritdoc ITokenLockUp
     function withdrawTokens(uint256 _index) public nonReentrant {
         // If the index is invalid, revert the transaction.
-        if (_index >= locks[msg.sender].user.length)
-            revert TokenLockUp_Invalid_Index();
+        uint256 len = locks[msg.sender].user.length;
+        if (_index >= len) revert TokenLockUp_Invalid_Index();
 
         // Get the lock details by reading via memory
         LockDetails memory lock = locks[msg.sender];
@@ -91,18 +91,21 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
             revert TokenLockUp_AmountShouldBeGreaterThanZero();
 
         // Check if tokens are still locked
-        if (
-            block.timestamp <
-            lock.user[_index].lockStart + lock.user[_index].lockDuration
-        ) revert TokenLockUp_TokensAreStillLocked();
+        uint256 deadline = lock.user[_index].lockStart +
+            lock.user[_index].lockDuration;
+
+        if (block.timestamp < deadline)
+            revert TokenLockUp_TokensAreStillLocked();
 
         uint256 withdrawAmount = lock.user[_index].amount;
 
         // modifying the state value
-        locks[msg.sender].user[_index].amount = 0;
-        locks[msg.sender].totalAmountLocked -= withdrawAmount;
+        LockDetails storage lock0 = locks[msg.sender];
 
-        if (locks[msg.sender].totalAmountLocked == 0) delete locks[msg.sender];
+        lock0.user[_index].amount = 0;
+        lock0.totalAmountLocked -= withdrawAmount;
+
+        if (lock0.totalAmountLocked == 0) delete locks[msg.sender];
 
         // Transfer the tokens to the user
         SafeERC20.safeTransfer(token, msg.sender, withdrawAmount);
@@ -116,7 +119,14 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
         address _userAddress,
         uint256 _pointsToReduce
     ) external onlyOverlayNFTContract {
+        if (_pointsToReduce == 0)
+            revert TokenLockUp_AmountShouldBeGreaterThanZero();
+
+        if (_pointsToReduce > earnedPoints[_userAddress])
+            revert TokenLockUp_AmountAboveEarnedPoints();
+
         earnedPoints[_userAddress] -= _pointsToReduce;
+        emit PointReduced(_userAddress, _pointsToReduce);
     }
 
     /// @inheritdoc ITokenLockUp
@@ -139,11 +149,10 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
 
         for (uint256 i; i < count; i++) {
             // Check if amount is above zero and if lock up duration has passed.
-            if (
-                lock.user[i].amount > 0 &&
-                block.timestamp >
-                lock.user[i].lockStart + lock.user[i].lockDuration
-            ) {
+            uint256 deadline = lock.user[i].lockStart +
+                lock.user[i].lockDuration;
+
+            if (lock.user[i].amount > 0 && block.timestamp > deadline) {
                 // Record the index of amount added.
                 indexToWithdrawWithPossibleExtraArraySpace[id] = i;
                 withdrawableAmount += lock.user[i].amount;
@@ -181,7 +190,8 @@ contract TokenLockUp is ITokenLockUp, Ownable, Pausable, ReentrancyGuard {
             delete locks[msg.sender];
         } else {
             // If not zero reset the amounts that are been withdrawn to zero
-            for (uint256 i; i < indexToWithdraw.length; i++) {
+            uint256 len = indexToWithdraw.length;
+            for (uint256 i; i < len; i++) {
                 locks[msg.sender].user[indexToWithdraw[i]].amount = 0;
             }
         }
